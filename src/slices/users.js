@@ -1,7 +1,7 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import UserService from "../services/user.service";
 
-const initialState = [];
+const initialState = { reviewers: [], users: [] };
 
 
 
@@ -13,12 +13,24 @@ export const retrieveReviewers = createAsyncThunk(
     }
 );
 
+export const retrieveAllUsers = createAsyncThunk(
+    "users/list",
+    async () => {
+        const res = await UserService.retrieveAllUsers();
+        return res.data;
+
+    }
+);
+
 const userSlice = createSlice({
     name: "client",
     initialState,
     extraReducers: {
         [retrieveReviewers.fulfilled]: (state, action) => {
-            return [...action.payload];
+            state.reviewers = action.payload;
+        },
+        [retrieveAllUsers.fulfilled]: (state, action) => {
+            state.users = action.payload;
         }
     },
 });

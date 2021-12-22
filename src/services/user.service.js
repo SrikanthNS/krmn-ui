@@ -22,12 +22,17 @@ const retrieveReviewers = () => {
     return http.get("/reviewer");
 };
 
+const retrieveAllUsers = () => {
+    return http.get("/userList", { headers: authHeader() });
+};
+
 const UserService = {
     getPublicContent,
     getUserBoard,
     getModeratorBoard,
     getAdminBoard,
     retrieveReviewers,
+    retrieveAllUsers,
 };
 
 export default UserService

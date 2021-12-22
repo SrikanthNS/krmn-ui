@@ -6,15 +6,17 @@ import { retrieveClients } from '../slices/clients';
 import {
     deleteAllTasks, deleteTask, findTasksByTitle, retrieveTasks
 } from "../slices/tasks";
-import { retrieveReviewers } from '../slices/users';
+import { retrieveReviewers, retrieveAllUsers } from '../slices/users';
 
 
 const TasksList = () => {
     const [searchTitle, setSearchTitle] = useState("");
     const tasks = useSelector(state => state.tasks);
     const clients = useSelector(state => state.client);
-    const reviewers = useSelector(state => state.user);
+    const { reviewers, users } = useSelector(state => state.user);
     const dispatch = useDispatch();
+    const { user: currentUser } = useSelector((state) => state.auth);
+    const [showUserCol, setShowUserCol] = useState(false);
 
     const onChangeSearchTitle = e => {
         const searchTitle = e.target.value;
@@ -28,8 +30,19 @@ const TasksList = () => {
         if (!reviewers.length) {
             dispatch(retrieveReviewers());
         }
+        if (!users.length) {
+            dispatch(retrieveAllUsers());
+        }
         dispatch(retrieveTasks());
     }, [dispatch])
+
+    useEffect(() => {
+        if (currentUser && currentUser.roles.includes("ROLE_ADMIN")) {
+            setShowUserCol(true);
+        } else {
+            setShowUserCol(false);
+        }
+    }, [currentUser]);
 
     useEffect(() => {
         initFetch()
@@ -91,6 +104,9 @@ const TasksList = () => {
                                 <th>
                                     #
                                 </th>
+                                {showUserCol && <th>
+                                    User
+                                </th>}
                                 <th>
                                     Client
                                 </th>
@@ -124,12 +140,21 @@ const TasksList = () => {
                                     return true
                                 });
                                 let reviewerName = "";
+                                let userName = "";
                                 reviewers.map(reviewer => {
                                     if (reviewer.id === task.reviewerId) {
                                         reviewerName = reviewer.username;
                                     }
                                     return true
                                 });
+
+                                showUserCol && users.map(user => {
+                                    if (user.id === task.userId) {
+                                        userName = user.username;
+                                    }
+                                    return true
+                                })
+
                                 return (
                                     <tr key={`task-row-${index}`} className={
                                         (task.completed ? "table-success" : "table-warning")
@@ -137,6 +162,9 @@ const TasksList = () => {
                                         <td>
                                             {index + 1}
                                         </td>
+                                        {showUserCol && <td>
+                                            {userName}
+                                        </td>}
                                         <td>
                                             {clientName}
                                         </td>
