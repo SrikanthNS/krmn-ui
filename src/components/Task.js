@@ -16,7 +16,7 @@ const Task = (props) => {
     };
 
     const clients = useSelector(state => state.client);
-    const reviewers = useSelector(state => state.user);
+    const { reviewers } = useSelector(state => state.user);
     const [currentTask, setCurrentTask] = useState(initialTaskState);
     const [message, setMessage] = useState("");
 
