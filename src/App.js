@@ -61,27 +61,27 @@ const App = () => {
             KRMN & Associates
           </Link>
           <div className="navbar-nav mr-auto">
-            <li className="nav-item">
+            {/* <li className="nav-item">
               <Link to={"/home"} className="nav-link">
                 Home
               </Link>
-            </li>
+            </li> */}
 
-            {showModeratorBoard && (
+            {/* {showModeratorBoard && (
               <li className="nav-item">
                 <Link to={"/mod"} className="nav-link">
                   Moderator Board
                 </Link>
               </li>
-            )}
+            )} */}
 
-            {showAdminBoard && (
+            {/* {showAdminBoard && (
               <li className="nav-item">
                 <Link to={"/admin"} className="nav-link">
                   Admin Board
                 </Link>
               </li>
-            )}
+            )} */}
 
             {currentUser && (
               <div className="navbar-nav ml-auto">
@@ -97,7 +97,7 @@ const App = () => {
                 </li>
                 {showAdminBoard && <li className="nav-item">
                   <Link to={"/register"} className="nav-link">
-                    Add Staff Member
+                    Add Staff
                   </Link>
                 </li>}
               </div>
