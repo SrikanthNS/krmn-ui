@@ -7,7 +7,7 @@ import { clearMessage } from "../slices/message";
 
 export const TaskForm = (props) => {
     const clients = useSelector(state => state.client);
-    const reviewers = useSelector(state => state.user);
+    const { reviewers } = useSelector(state => state.user);
     const [taskStatus, updateStatus] = useState(false);
     const todaysDate = moment().format('YYYY-MM-DD');
     const initialTaskState = {

@@ -95,37 +95,37 @@ const TasksList = () => {
                     </div>
                 </div>
             </div>
-            <div className="col-md-12">
+            <div className="col-md-12 table-responsive-md">
                 <h4>Task List</h4>
                 {tasks &&
-                    <table className="table">
+                    <table className="table table-striped">
                         <thead>
                             <tr>
-                                <th>
+                                <th scope="col">
                                     #
                                 </th>
-                                {showUserCol && <th>
+                                {showUserCol && <th scope="col">
                                     User
                                 </th>}
-                                <th>
+                                <th scope="col">
                                     Client
                                 </th>
-                                <th>
+                                <th scope="col">
                                     Desc
                                 </th>
-                                <th>
+                                <th scope="col">
                                     Date
                                 </th>
-                                <th>
+                                <th scope="col">
                                     Time Spent
                                 </th>
-                                <th>
+                                <th scope="col">
                                     Status
                                 </th>
-                                <th>
+                                <th scope="col">
                                     Reviewer
                                 </th>
-                                <th colSpan="2">
+                                <th scope="col" colSpan="2">
                                     Actions
                                 </th>
                             </tr>
@@ -183,16 +183,18 @@ const TasksList = () => {
                                         <td>
                                             {reviewerName}
                                         </td>
-                                        <td style={{ display: 'inline-flex' }}>
-                                            <Link
-                                                to={"/tasks/" + task.id}
-                                                className="btn btn-sm btn-warning mr-2 mt-0"
-                                            >
-                                                Edit
-                                            </Link>
-                                            <button className="btn btn-sm btn-danger mr-2 mt-0" onClick={() => removeTask(task.id)}>
-                                                Delete
-                                            </button>
+                                        <td colSpan="2">
+                                            <div style={{ display: 'inline-flex' }}>
+                                                <Link
+                                                    to={"/tasks/" + task.id}
+                                                    className="btn btn-sm btn-warning mr-2 mt-0"
+                                                >
+                                                    Edit
+                                                </Link>
+                                                <button className="btn btn-sm btn-danger mr-2 mt-0" onClick={() => removeTask(task.id)}>
+                                                    Delete
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 )
@@ -201,7 +203,9 @@ const TasksList = () => {
                     </table>
 
                 }
-                {tasks.length === 0 ?
+            </div >
+            {
+                tasks.length === 0 ?
 
 
                     <h5 className="text-center text-info">
@@ -215,8 +219,7 @@ const TasksList = () => {
                         Remove All
                     </button>
 
-                }
-            </div>
+            }
         </div >
     );
 };

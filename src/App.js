@@ -16,10 +16,11 @@ import TasksList from "./components/TasksList";
 import { history } from "./helpers/history";
 import { logout } from "./slices/auth";
 import { clearMessage } from "./slices/message";
+import { capitalize } from 'lodash';
 // import AuthVerify from "./common/AuthVerify";
 
 const App = () => {
-  const [showModeratorBoard, setShowModeratorBoard] = useState(false);
+  // const [showModeratorBoard, setShowModeratorBoard] = useState(false);
   const [showAdminBoard, setShowAdminBoard] = useState(false);
 
   const { user: currentUser } = useSelector((state) => state.auth);
@@ -37,10 +38,10 @@ const App = () => {
 
   useEffect(() => {
     if (currentUser) {
-      setShowModeratorBoard(currentUser.roles.includes("ROLE_MODERATOR"));
+      // setShowModeratorBoard(currentUser.roles.includes("ROLE_MODERATOR"));
       setShowAdminBoard(currentUser.roles.includes("ROLE_ADMIN"));
     } else {
-      setShowModeratorBoard(false);
+      // setShowModeratorBoard(false);
       setShowAdminBoard(false);
     }
 
@@ -56,11 +57,60 @@ const App = () => {
   return (
     <Router history={history}>
       <div>
-        <nav className="navbar navbar-expand navbar-dark bg-dark">
+        <nav className="navbar navbar-expand-md bg-dark navbar-dark">
           <Link to={"/"} className="navbar-brand">
             KRMN & Associates
           </Link>
-          <div className="navbar-nav mr-auto">
+          <button className="navbar-toggler" type="button" data-toggle="collapse" aria-expanded="false" data-target="#collapsibleNavbar">
+            <span className="navbar-toggler-icon"></span>
+          </button>
+          <div className="collapse navbar-collapse" id="collapsibleNavbar">
+            <ul className="navbar-nav mr-auto">
+              {currentUser && (
+                <React.Fragment>
+                  <li className="nav-item">
+                    <Link to={"/taskList"} className="nav-link">
+                      Task List
+                    </Link>
+                  </li>
+                  <li className="nav-item">
+                    <Link to={"/addTask"} className="nav-link">
+                      Add Task
+                    </Link>
+                  </li>
+                  {showAdminBoard && <li className="nav-item">
+                    <Link to={"/register"} className="nav-link">
+                      Add Staff
+                    </Link>
+                  </li>}
+                </React.Fragment>
+              )}
+            </ul>
+            <ul className="navbar-nav mr">
+              {currentUser ? (
+                <React.Fragment>
+                  <li className="nav-item mr-auto">
+                    <Link to={"/profile"} className="nav-link">
+                      {capitalize(currentUser.username)}
+                    </Link>
+                  </li>
+                  <li className="nav-item">
+                    <a href="/login" className="nav-link" onClick={logOut}>
+                      LogOut
+                    </a>
+                  </li>
+                </React.Fragment>
+              ) : (
+                <React.Fragment>
+                  <li className="nav-item">
+                    <Link to={"/login"} className="nav-link">
+                      Login
+                    </Link>
+                  </li>
+                </React.Fragment>
+              )}
+
+            </ul>
             {/* <li className="nav-item">
               <Link to={"/home"} className="nav-link">
                 Home
@@ -83,49 +133,8 @@ const App = () => {
               </li>
             )} */}
 
-            {currentUser && (
-              <div className="navbar-nav ml-auto">
-                <li className="nav-item">
-                  <Link to={"/taskList"} className="nav-link">
-                    Task List
-                  </Link>
-                </li>
-                <li className="nav-item">
-                  <Link to={"/addTask"} className="nav-link">
-                    Add Task
-                  </Link>
-                </li>
-                {showAdminBoard && <li className="nav-item">
-                  <Link to={"/register"} className="nav-link">
-                    Add Staff
-                  </Link>
-                </li>}
-              </div>
-            )}
-          </div>
 
-          {currentUser ? (
-            <div className="navbar-nav ml-auto">
-              <li className="nav-item">
-                <Link to={"/profile"} className="nav-link">
-                  {currentUser.username}
-                </Link>
-              </li>
-              <li className="nav-item">
-                <a href="/login" className="nav-link" onClick={logOut}>
-                  LogOut
-                </a>
-              </li>
-            </div>
-          ) : (
-            <div className="navbar-nav ml-auto">
-              <li className="nav-item">
-                <Link to={"/login"} className="nav-link">
-                  Login
-                </Link>
-              </li>
-            </div>
-          )}
+          </div>
         </nav>
 
         <div className="container mt-3">
@@ -142,8 +151,8 @@ const App = () => {
           </Switch>
         </div>
         {/* <AuthVerify logOut={logOut}/> */}
-      </div>
-    </Router>
+      </div >
+    </Router >
   );
 };
 
