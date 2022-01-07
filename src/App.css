@@ -96,3 +96,7 @@ label {
 .btn {
   box-shadow: none !important;
 }
+
+div#navbarSupportedContent {
+  justify-content: space-between;
+}

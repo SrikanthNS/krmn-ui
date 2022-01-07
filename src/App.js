@@ -57,83 +57,77 @@ const App = () => {
   return (
     <Router history={history}>
       <div>
-        <nav className="navbar navbar-expand-md bg-dark navbar-dark">
-          <Link to={"/"} className="navbar-brand">
-            KRMN & Associates
-          </Link>
-          <button className="navbar-toggler" type="button" data-toggle="collapse" aria-expanded="false" data-target="#collapsibleNavbar">
-            <span className="navbar-toggler-icon"></span>
-          </button>
-          <div className="collapse navbar-collapse" id="collapsibleNavbar">
-            <ul className="navbar-nav mr-auto">
-              {currentUser && (
-                <React.Fragment>
-                  <li className="nav-item">
-                    <Link to={"/taskList"} className="nav-link">
-                      Task List
-                    </Link>
-                  </li>
-                  <li className="nav-item">
-                    <Link to={"/addTask"} className="nav-link">
-                      Add Task
-                    </Link>
-                  </li>
-                  {showAdminBoard && <li className="nav-item">
-                    <Link to={"/register"} className="nav-link">
-                      Add Staff
-                    </Link>
-                  </li>}
-                </React.Fragment>
-              )}
-            </ul>
-            <ul className="navbar-nav mr">
-              {currentUser ? (
-                <React.Fragment>
-                  <li className="nav-item mr-auto">
-                    <Link to={"/profile"} className="nav-link">
-                      {capitalize(currentUser.username)}
-                    </Link>
-                  </li>
-                  <li className="nav-item">
-                    <a href="/login" className="nav-link" onClick={logOut}>
-                      LogOut
+        <nav className="navbar navbar-expand-lg bg-dark navbar-dark">
+          <div className="container-fluid">
+            <Link to={"/"} className="navbar-brand">
+              KRMN & Associates
+            </Link>
+            <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+              <span className="navbar-toggler-icon"></span>
+            </button>
+            <div className="collapse navbar-collapse" id="navbarSupportedContent">
+              <ul className="navbar-nav me-auto mb-2 mb-lg-0">
+
+                {currentUser && (<React.Fragment>
+                  <li className="nav-item dropdown">
+                    <a className="nav-link dropdown-toggle" href="#" id="navbarDropdown1" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                      Tasks
                     </a>
+                    <ul className="dropdown-menu" aria-labelledby="navbarDropdown1">
+                      <li><Link to={"/taskList"} className="dropdown-item" href="#">Task List</Link></li>
+                      <li><Link to={"/addTask"} className="dropdown-item" href="#">Add Task</Link></li>
+                    </ul>
                   </li>
+
+                  {showAdminBoard && <React.Fragment>
+                    <li className="nav-item dropdown">
+                      <a className="nav-link dropdown-toggle" href="#" id="navbarDropdown2" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Staff
+                      </a>
+                      <ul className="dropdown-menu" aria-labelledby="navbarDropdown2">
+                        <li><Link to={"/register"} className="dropdown-item" href="#">Add Staff</Link></li>
+                      </ul>
+                    </li>
+                    <li className="nav-item dropdown">
+                      <a className="nav-link dropdown-toggle" href="#" id="navbarDropdown2" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Clients
+                      </a>
+                      <ul className="dropdown-menu" aria-labelledby="navbarDropdown2">
+                        <li><Link to={"/taskList"} className="dropdown-item" href="#">Client List</Link></li>
+                        <li><Link to={"/addTask"} className="dropdown-item" href="#">Add Client</Link></li>
+                      </ul>
+                    </li>
+                  </React.Fragment>
+                  }
                 </React.Fragment>
-              ) : (
-                <React.Fragment>
-                  <li className="nav-item">
-                    <Link to={"/login"} className="nav-link">
-                      Login
-                    </Link>
-                  </li>
-                </React.Fragment>
-              )}
+                )}
+              </ul>
+              <ul className="navbar-nav mr">
+                {currentUser ? (
+                  <React.Fragment>
+                    <li className="nav-item mr-auto">
+                      <Link to={"/profile"} className="nav-link">
+                        My Profile{/* {capitalize(currentUser.username)} */}
+                      </Link>
+                    </li>
+                    <li className="nav-item">
+                      <a href="/login" className="nav-link" onClick={logOut}>
+                        LogOut
+                      </a>
+                    </li>
+                  </React.Fragment>
+                ) : (
+                  <React.Fragment>
+                    <li className="nav-item">
+                      <Link to={"/login"} className="nav-link">
+                        Login
+                      </Link>
+                    </li>
+                  </React.Fragment>
+                )}
 
-            </ul>
-            {/* <li className="nav-item">
-              <Link to={"/home"} className="nav-link">
-                Home
-              </Link>
-            </li> */}
-
-            {/* {showModeratorBoard && (
-              <li className="nav-item">
-                <Link to={"/mod"} className="nav-link">
-                  Moderator Board
-                </Link>
-              </li>
-            )} */}
-
-            {/* {showAdminBoard && (
-              <li className="nav-item">
-                <Link to={"/admin"} className="nav-link">
-                  Admin Board
-                </Link>
-              </li>
-            )} */}
-
-
+              </ul>
+            </div>
           </div>
         </nav>
 
