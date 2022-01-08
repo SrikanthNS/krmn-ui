@@ -169,7 +169,7 @@ const TasksList = () => {
                                             {clientName}
                                         </td>
                                         <td>
-                                            {task.description.substr(0, 10)}
+                                            {task.description}
                                         </td>
                                         <td>
                                             {moment(task.date).format('DD/MM/yyyy')}
