@@ -128,26 +128,30 @@ const ClientList = () => {
             </div>
             <div className="col-md-2 table-responsive-md"></div>
             {/* client list table end */}
-            <div className="col-md-12">
-            </div >
-            {
-                clients.length === 0 ?
+            <div className="col-md-10">
 
 
-                    <h5 className="text-center text-info">
-                        No Records Found
-                    </h5>
-                    :
-                    <button
-                        className="m-3 btn btn-sm btn-danger"
-                        onClick={removeAllClients}
-                    >
-                        Remove All
-                    </button>
+                {
+                    clients.length === 0 ?
 
-            }
+                        <div className="d-flex justify-content-center">
+                            <h5 className="text-center text-info">
+                                No Records Found
+                            </h5>
+                        </div>
+                        :
+                        <div className="d-flex justify-content-end">
+                            <button
+                                className="m-3 btn btn-sm btn-danger"
+                                onClick={removeAllClients}
+                            >
+                                Remove All
+                            </button>
+                        </div>
+
+                }
+            </div>
         </div >
-
     );
 };
 

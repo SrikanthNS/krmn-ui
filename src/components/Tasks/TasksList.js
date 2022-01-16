@@ -204,23 +204,28 @@ const TasksList = () => {
 
                 }
             </div >
-            {
-                tasks.length === 0 ?
+            <div className="col-md-12 table-responsive-md">
+                {
+                    tasks.length === 0 ?
 
+                        <div className="d-flex justify-content-center">
+                            <h5 className="text-center text-info">
+                                No Records Found
+                            </h5>
+                        </div>
+                        :
+                        <div className="d-flex justify-content-end">
+                            <button
+                                className="m-3 btn btn-sm btn-danger"
+                                onClick={removeAllTasks}
+                            >
+                                Remove All
+                            </button>
+                        </div>
 
-                    <h5 className="text-center text-info">
-                        No Records Found
-                    </h5>
-                    :
-                    <button
-                        className="m-3 btn btn-sm btn-danger"
-                        onClick={removeAllTasks}
-                    >
-                        Remove All
-                    </button>
-
-            }
-        </div >
+                }
+            </div >
+        </div>
     );
 };
 
