@@ -1,23 +1,25 @@
 import "bootstrap/dist/css/bootstrap.min.css";
-import Task from "components/Task";
+import AddTask from "components/Tasks/AddTask";
+import Task from "components/Tasks/Task";
+import TasksList from "components/Tasks/TasksList";
 import React, { useCallback, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { BrowserRouter as Router, Link, Route, Switch } from "react-router-dom";
 import "./App.css";
 import EventBus from "./common/EventBus";
-import AddTask from './components/AddTask';
 import BoardAdmin from "./components/BoardAdmin";
 import BoardModerator from "./components/BoardModerator";
 import Home from "./components/Home";
 import Login from "./components/Login";
 import Profile from "./components/Profile";
 import Register from "./components/Register";
-import TasksList from "./components/TasksList";
 import { history } from "./helpers/history";
 import { logout } from "./slices/auth";
 import { clearMessage } from "./slices/message";
-import { capitalize } from 'lodash';
-// import AuthVerify from "./common/AuthVerify";
+import AuthVerify from "./common/AuthVerify";
+import ClientList from 'components/clients/ClientList';
+import AddClient from "components/clients/AddClient";
+import Client from 'components/clients/Client';
 
 const App = () => {
   // const [showModeratorBoard, setShowModeratorBoard] = useState(false);
@@ -93,8 +95,8 @@ const App = () => {
                         Clients
                       </a>
                       <ul className="dropdown-menu" aria-labelledby="navbarDropdown2">
-                        <li><Link to={"/taskList"} className="dropdown-item" href="#">Client List</Link></li>
-                        <li><Link to={"/addTask"} className="dropdown-item" href="#">Add Client</Link></li>
+                        <li><Link to={"/clientList"} className="dropdown-item" href="#">Client List</Link></li>
+                        <li><Link to={"/addClient"} className="dropdown-item" href="#">Add Client</Link></li>
                       </ul>
                     </li>
                   </React.Fragment>
@@ -142,9 +144,12 @@ const App = () => {
             <Route path="/mod" component={BoardModerator} />
             <Route path="/admin" component={BoardAdmin} />
             <Route path="/tasks/:id" component={Task} />
+            <Route path="/clientList" component={ClientList} />
+            <Route path="/addClient" component={AddClient} />
+            <Route path="/clients/:id" component={Client} />
           </Switch>
         </div>
-        {/* <AuthVerify logOut={logOut}/> */}
+        <AuthVerify logOut={logOut} />
       </div >
     </Router >
   );

@@ -1,6 +1,6 @@
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { setMessage } from "./message";
+import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import TaskService from "../services/task.service";
+import { setMessage } from "./message";
 
 const initialState = [];
 
@@ -24,7 +24,7 @@ export const createTask = createAsyncThunk(
 );
 
 export const retrieveTasks = createAsyncThunk(
-    "Tasks/retrieve",
+    "tasks/retrieve",
     async () => {
         const res = await TaskService.getAll();
         return res.data;
@@ -40,7 +40,7 @@ export const retrieveCurrentUserTasks = createAsyncThunk(
 );
 
 export const updateTask = createAsyncThunk(
-    "Tasks/update",
+    "tasks/update",
     async ({ id, data }) => {
         const res = await TaskService.update(id, data);
         return res.data;

@@ -2,11 +2,11 @@ import moment from 'moment';
 import React, { useCallback, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
-import { retrieveClients } from '../slices/clients';
+import { retrieveClients } from '../../slices/clients';
 import {
     deleteAllTasks, deleteTask, findTasksByTitle, retrieveTasks
-} from "../slices/tasks";
-import { retrieveReviewers, retrieveAllUsers } from '../slices/users';
+} from "../../slices/tasks";
+import { retrieveReviewers, retrieveAllUsers } from '../../slices/users';
 
 
 const TasksList = () => {

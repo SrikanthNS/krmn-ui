@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import moment from 'moment';
 import { useDispatch, useSelector } from "react-redux";
-import TaskDataService from "../services/task.service";
-import { deleteTask, updateTask } from "../slices/tasks";
+import TaskDataService from "../../services/task.service";
+import { deleteTask, updateTask } from "../../slices/tasks";
 
 const Task = (props) => {
     const initialTaskState = {

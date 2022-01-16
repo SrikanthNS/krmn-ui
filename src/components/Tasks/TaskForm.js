@@ -3,7 +3,7 @@ import moment from 'moment';
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import * as Yup from "yup";
-import { clearMessage } from "../slices/message";
+import { clearMessage } from "../../slices/message";
 
 export const TaskForm = (props) => {
     const clients = useSelector(state => state.client);

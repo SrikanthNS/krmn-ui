@@ -1,8 +1,8 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
-import { retrieveClients } from '../slices/clients';
-import { createTask } from "../slices/tasks";
-import { retrieveReviewers } from '../slices/users';
+import { retrieveClients } from '../../slices/clients';
+import { createTask } from "../../slices/tasks";
+import { retrieveReviewers } from '../../slices/users';
 // import AddIcon from '@mui/icons-material/Add';
 import { TaskForm } from "./TaskForm";
 

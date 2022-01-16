@@ -1,5 +1,6 @@
 import http from "../http-common";
 import authHeader from "./auth-header";
+
 const getAll = () => {
     return http.get("/tasks", { headers: authHeader() });
 };
