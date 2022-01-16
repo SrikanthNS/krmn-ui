@@ -20,6 +20,7 @@ import AuthVerify from "./common/AuthVerify";
 import ClientList from 'components/clients/ClientList';
 import AddClient from "components/clients/AddClient";
 import Client from 'components/clients/Client';
+import { capitalize } from 'lodash';
 
 const App = () => {
   // const [showModeratorBoard, setShowModeratorBoard] = useState(false);
@@ -84,19 +85,19 @@ const App = () => {
                   {showAdminBoard && <React.Fragment>
                     <li className="nav-item dropdown">
                       <a className="nav-link dropdown-toggle" href="#" id="navbarDropdown2" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        Staff
-                      </a>
-                      <ul className="dropdown-menu" aria-labelledby="navbarDropdown2">
-                        <li><Link to={"/register"} className="dropdown-item" href="#">Add Staff</Link></li>
-                      </ul>
-                    </li>
-                    <li className="nav-item dropdown">
-                      <a className="nav-link dropdown-toggle" href="#" id="navbarDropdown2" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                         Clients
                       </a>
                       <ul className="dropdown-menu" aria-labelledby="navbarDropdown2">
                         <li><Link to={"/clientList"} className="dropdown-item" href="#">Client List</Link></li>
                         <li><Link to={"/addClient"} className="dropdown-item" href="#">Add Client</Link></li>
+                      </ul>
+                    </li>
+                    <li className="nav-item dropdown">
+                      <a className="nav-link dropdown-toggle" href="#" id="navbarDropdown2" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Staff
+                      </a>
+                      <ul className="dropdown-menu" aria-labelledby="navbarDropdown2">
+                        <li><Link to={"/register"} className="dropdown-item" href="#">Add Staff</Link></li>
                       </ul>
                     </li>
                   </React.Fragment>
@@ -107,16 +108,17 @@ const App = () => {
               <ul className="navbar-nav mr">
                 {currentUser ? (
                   <React.Fragment>
-                    <li className="nav-item mr-auto">
-                      <Link to={"/profile"} className="nav-link">
-                        My Profile{/* {capitalize(currentUser.username)} */}
-                      </Link>
-                    </li>
-                    <li className="nav-item">
-                      <a href="/login" className="nav-link" onClick={logOut}>
-                        LogOut
+                    <li className="nav-item dropdown">
+                      <a className="nav-link dropdown-toggle" href="#" id="navbarDropdown2" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Hello {capitalize(currentUser.username)}
                       </a>
+                      <ul className="dropdown-menu" aria-labelledby="navbarDropdown2">
+                        <li><a href="/login" className="dropdown-item" onClick={logOut}>
+                          LogOut
+                        </a></li>
+                      </ul>
                     </li>
+
                   </React.Fragment>
                 ) : (
                   <React.Fragment>

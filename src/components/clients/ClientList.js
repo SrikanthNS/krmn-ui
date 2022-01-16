@@ -6,7 +6,6 @@ import {
     deleteAllClients, deleteClient, findClientByName, retrieveClients
 } from "../../slices/clients";
 
-
 const ClientList = () => {
     const [searchName, setSearchName] = useState("");
     const clients = useSelector(state => state.client);
