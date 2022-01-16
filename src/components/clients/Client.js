@@ -46,7 +46,7 @@ const Client = (props) => {
 
     const removeClient = () => {
         props.history.push("/clientList");
-        window.location.reload();
+
         // dispatch(deleteClient({ id: currentClient.id }))
         //     .unwrap()
         //     .then(() => {
@@ -59,6 +59,7 @@ const Client = (props) => {
 
     return (
         <div>
+
             {currentClient && (
                 <div className="edit-form">
                     <h4>Client</h4>
@@ -76,16 +77,15 @@ const Client = (props) => {
                         </div>
                     </form>
 
-                    <button className="btn btn-md btn-primary mr-2" onClick={removeClient}>
-                        Cancel
-                    </button>
-
                     <button
                         type="submit"
                         className="btn btn-md mr-2 btn-success"
                         onClick={updateContent}
                     >
                         Update
+                    </button>
+                    <button className="btn btn-md btn-primary mr-2" onClick={removeClient}>
+                        {`< Go Back`}
                     </button>
                     <p>{message}</p>
                 </div>
