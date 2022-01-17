@@ -39,29 +39,32 @@ const AddClient = () => {
 
 
     return (
-        <div className="submit-form" >
-            {submitted ? (
-                <div>
-                    <h4>You submitted successfully!</h4>
-                    <button className="btn btn-success" onClick={() => newClient()}>
-                        Add
-                    </button>
-                </div>
-            ) :
-                (<div className="row">
-                    {/* <div >
+        <div className="col-md-12 table-responsive-md">
+            <h4>Add New Client</h4>
+            <hr></hr>
+            <div className="submit-form" >
+                {submitted ? (
+                    <div>
+                        <h4>You submitted successfully!</h4>
+                        <button className="btn btn-success" onClick={() => newClient()}>
+                            Add
+                        </button>
+                    </div>
+                ) :
+                    (<div className="row">
+                        {/* <div >
                         <button className="btn btn-success" onClick={newClient}>
                             Add <AddIcon />
                         </button>
                     </div> */}
-                    <div className="col-md-12" style={{ display: 'flex', flexDirection: 'column' }} >
-                        {clientList.map(eachClient => eachClient)}
-                    </div>
-                </div >)
-            }
+                        <div className="col-md-12" style={{ display: 'flex', flexDirection: 'column' }} >
+                            {clientList.map(eachClient => eachClient)}
+                        </div>
+                    </div >)
+                }
 
-        </div >
-
+            </div >
+        </div>
     );
 };
 

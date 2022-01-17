@@ -15,6 +15,12 @@ const ClientList = () => {
         setSearchName(searchName);
     };
 
+    const onSearchSubmit = e => {
+        if (e.code === 'Enter') {
+            findByName();
+        }
+    };
+
     const initFetch = useCallback(() => {
 
         dispatch(retrieveClients());
@@ -59,6 +65,7 @@ const ClientList = () => {
                         placeholder="Search by description"
                         value={searchName}
                         onChange={onChangeSearchName}
+                        onKeyPress={onSearchSubmit}
                     />
                     <div className="input-group-append">
                         <button

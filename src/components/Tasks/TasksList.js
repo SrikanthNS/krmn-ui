@@ -24,15 +24,9 @@ const TasksList = () => {
     };
 
     const initFetch = useCallback(() => {
-        if (!clients.length) {
-            dispatch(retrieveClients());
-        }
-        if (!reviewers.length) {
-            dispatch(retrieveReviewers());
-        }
-        if (!users.length) {
-            dispatch(retrieveAllUsers());
-        }
+        dispatch(retrieveClients());
+        dispatch(retrieveReviewers());
+        dispatch(retrieveAllUsers());
         dispatch(retrieveTasks());
     }, [dispatch])
 
@@ -73,6 +67,12 @@ const TasksList = () => {
         dispatch(findTasksByTitle({ description: searchTitle }));
     };
 
+    const onSearchSubmit = e => {
+        if (e.code === 'Enter') {
+            findByTitle();
+        }
+    };
+
     return (
         <div className=" row">
             <div className="col-md-12">
@@ -83,6 +83,7 @@ const TasksList = () => {
                         placeholder="Search by description"
                         value={searchTitle}
                         onChange={onChangeSearchTitle}
+                        onKeyPress={onSearchSubmit}
                     />
                     <div className="input-group-append">
                         <button

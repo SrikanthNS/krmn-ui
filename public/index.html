@@ -34,10 +34,8 @@
     function myFunction() {
       const navLinks = document.querySelectorAll('.dropdown-item')
       const menuToggle = document.getElementById('navbarSupportedContent')
-      console.log("🚀 ~ file: index.html ~ line 34 ~ menuToggle", menuToggle)
       const bsCollapse = new bootstrap.Collapse(menuToggle);
       navLinks.forEach((l) => {
-        console.log("🚀 ~ file: index.html ~ line 40 ~ navLinks.forEach ~ l", l)
         l.addEventListener('click', () => { bsCollapse.toggle() })
       })
     }

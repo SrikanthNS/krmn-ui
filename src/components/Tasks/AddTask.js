@@ -43,28 +43,32 @@ const AddTask = () => {
 
 
     return (
-        <div className="submit-form" >
-            {submitted ? (
-                <div>
-                    <h4>You submitted successfully!</h4>
-                    <button className="btn btn-success" onClick={(clients, reviewers) => newTask()}>
-                        Add
-                    </button>
-                </div>
-            ) :
-                (<div className="row">
-                    {/* <div >
+        <div className="col-md-12 table-responsive-md">
+            <h4>New Task</h4>
+            <hr></hr>
+            <div className="submit-form" >
+                {submitted ? (
+                    <div>
+                        <h4>You submitted successfully!</h4>
+                        <button className="btn btn-success" onClick={(clients, reviewers) => newTask()}>
+                            Add
+                        </button>
+                    </div>
+                ) :
+                    (<div className="row">
+                        {/* <div >
                         <button className="btn btn-success" onClick={newTask}>
                             Add <AddIcon />
                         </button>
                     </div> */}
-                    <div className="col-md-12" style={{ display: 'flex', flexDirection: 'column' }} >
-                        {taskList.map(eachTask => eachTask)}
-                    </div>
-                </div >)
-            }
+                        <div className="col-md-12" style={{ display: 'flex', flexDirection: 'column' }} >
+                            {taskList.map(eachTask => eachTask)}
+                        </div>
+                    </div >)
+                }
 
-        </div >
+            </div >
+        </div>
 
     );
 };

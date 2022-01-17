@@ -88,10 +88,12 @@ const Task = (props) => {
     };
 
     return (
-        <div>
+        <div className="col-md-12 table-responsive-md">
+            <h4>Edit Task</h4>
+            <hr></hr>
             {currentTask ? (
                 <div className="edit-form">
-                    <h4>Task</h4>
+
                     <form>
                         <div className="form-group">
                             <label htmlFor="client">Choose client:</label>

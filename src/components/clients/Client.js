@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import ClientService from "../../services/client.service";
-import { deleteClient, updateClient } from "../../slices/clients";
+import { updateClient } from "../../slices/clients";
 
 const Client = (props) => {
     const initialClientState = {
@@ -44,25 +44,13 @@ const Client = (props) => {
             });
     };
 
-    const removeClient = () => {
-        props.history.push("/clientList");
-
-        // dispatch(deleteClient({ id: currentClient.id }))
-        //     .unwrap()
-        //     .then(() => {
-        //         props.history.push("/clients");
-        //     })
-        //     .catch(e => {
-        //         console.log(e);
-        //     });
-    };
-
     return (
-        <div>
+        <div className="col-md-12 table-responsive-md">
+            <h4>Edit Client</h4>
+            <hr></hr>
 
             {currentClient && (
                 <div className="edit-form">
-                    <h4>Client</h4>
                     <form>
                         <div className="form-group">
                             <label htmlFor="name">Name</label>
@@ -84,7 +72,7 @@ const Client = (props) => {
                     >
                         Update
                     </button>
-                    <button className="btn btn-md btn-primary mr-2" onClick={removeClient}>
+                    <button className="btn btn-md btn-primary mr-2" onClick={() => props.history.push('/clientList')}>
                         {`< Go Back`}
                     </button>
                     <p>{message}</p>

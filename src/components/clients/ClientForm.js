@@ -4,12 +4,10 @@ import { useDispatch, useSelector } from "react-redux";
 import * as Yup from "yup";
 import { clearMessage } from "../../slices/message";
 
-
 export const ClientForm = (props) => {
     const initialClientState = {
         name: "",
     };
-    const [client, setClient] = useState(initialClientState);
     const [loading, setLoading] = useState(false);
     const { message } = useSelector((state) => state.message);
 
