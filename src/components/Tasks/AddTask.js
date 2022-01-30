@@ -12,8 +12,8 @@ const AddTask = () => {
     const dispatch = useDispatch();
 
     const saveTask = (task) => {
-        const { description, completed, date, minutesSpent, reviewerId, clientId } = task;
-        dispatch(createTask({ description, date, completed, minutesSpent, reviewerId, clientId }))
+        const { description, completed, date, minutesSpent, reviewerId, clientId, taskType } = task;
+        dispatch(createTask({ description, date, completed, minutesSpent, reviewerId, clientId, taskType }))
             .unwrap()
             .then(() => {
                 setTaskList([]);

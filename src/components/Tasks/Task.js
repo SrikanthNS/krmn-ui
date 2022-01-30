@@ -12,7 +12,8 @@ const Task = (props) => {
         description: "",
         minutesSpent: null,
         completed: false,
-        reviewerId: null
+        reviewerId: null,
+        taskType: ""
     };
 
     const clients = useSelector(state => state.client);
@@ -25,7 +26,8 @@ const Task = (props) => {
     const getTask = id => {
         TaskDataService.get(id)
             .then(response => {
-                setCurrentTask(response.data);
+                setCurrentTask(
+                    { ...response.data, ...(response.data?.taskType === undefined || null && { taskType: '' }) });
             })
             .catch(e => {
                 console.log(e);
@@ -42,6 +44,7 @@ const Task = (props) => {
     };
 
     const updateStatus = status => {
+
         const data = {
             id: currentTask.id,
             clientId: currentTask.clientId,
@@ -49,7 +52,8 @@ const Task = (props) => {
             description: currentTask.description,
             completed: status,
             minutesSpent: currentTask.minutesSpent,
-            date: currentTask.date
+            date: currentTask.date,
+            taskType: currentTask.taskType,
         };
 
         dispatch(updateTask({ id: currentTask.id, data }))
@@ -92,7 +96,7 @@ const Task = (props) => {
             <h4>Edit Task</h4>
             <hr></hr>
             {currentTask ? (
-                <div className="edit-form">
+                < div className="edit-form">
 
                     <form>
                         <div className="form-group">
@@ -108,6 +112,21 @@ const Task = (props) => {
                         <div className="form-group">
                             <label htmlFor="taskDate">Date:</label>
                             <input className="form-control" type="date" value={moment(currentTask.date).format(('YYYY-MM-DD'))} id="taskDate" name="date" onChange={handleInputChange} />
+                        </div>
+                        <div className="form-group">
+                            <label htmlFor="taskType">Choose task type<sup className="text-center text-danger">
+                                *</sup>:</label>
+
+                            <select className="form-control" onChange={handleInputChange} name="taskType" id="taskType">
+                                <option selected={currentTask.taskType === ""} value="">Select Task Type</option>
+                                <option selected={currentTask.taskType === "Income Tax"} key='type-1' value="Income Tax">Income Tax</option>
+                                <option selected={currentTask.taskType === "GST"} key='type-2' value="GST">GST</option>
+                                <option selected={currentTask.taskType === "MCA"} key='type-3' value="MCA">MCA</option>
+                                <option selected={currentTask.taskType === "FEMA"} key='type-4' value="FEMA">FEMA</option>
+                                <option selected={currentTask.taskType === "DGFT"} key='type-5' value="DGFT">DGFT</option>
+                                <option selected={currentTask.taskType === "Others"} key='type-6' value="Others">Others</option>
+                            </select>
+
                         </div>
                         <div className="form-group">
                             <label htmlFor="description">Description</label>
@@ -184,8 +203,9 @@ const Task = (props) => {
                     <br />
                     <p>Please click on a Task to view...</p>
                 </div>
-            )}
-        </div>
+            )
+            }
+        </div >
     );
 };
 

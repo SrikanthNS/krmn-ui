@@ -6,9 +6,9 @@ const initialState = [];
 
 export const createTask = createAsyncThunk(
     "task/create",
-    async ({ description, minutesSpent, date, completed, clientId, reviewerId }, thunkAPI) => {
+    async ({ description, minutesSpent, date, completed, clientId, reviewerId, taskType }, thunkAPI) => {
         try {
-            const res = await TaskService.create({ description, minutesSpent, date, completed, clientId, reviewerId });
+            const res = await TaskService.create({ description, minutesSpent, date, completed, clientId, reviewerId, taskType });
             return res.data;
         } catch (error) {
             const message =

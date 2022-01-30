@@ -17,6 +17,7 @@ export const TaskForm = (props) => {
         clientId: "",
         reviewerId: null,
         minutesSpent: "",
+        taskType: ""
     };
     const [task, setTask] = useState(initialTaskState);
     const [loading, setLoading] = useState(false);
@@ -30,9 +31,9 @@ export const TaskForm = (props) => {
 
 
     const saveTask = (formValues) => {
-        const { description, minutesSpent, clientId } = formValues
+        const { description, minutesSpent, clientId, taskType } = formValues
         setLoading(true)
-        props.saveTask({ ...task, description, minutesSpent, clientId }).then(() => {
+        props.saveTask({ ...task, description, minutesSpent, clientId, taskType }).then(() => {
             setLoading(false);
         })
     }
@@ -52,6 +53,7 @@ export const TaskForm = (props) => {
         clientId: Yup.string().required("This field is required!"),
         description: Yup.string().required("This field is required!"),
         minutesSpent: Yup.number().required("This field is required!"),
+        taskType: Yup.string().required("This field is required!"),
     });
     return (
 
@@ -70,7 +72,7 @@ export const TaskForm = (props) => {
                         </div>
                     )}
                     <div className="form-group">
-                        <label htmlFor="client">Choose client<sup className="text-center text-danger">
+                        <label htmlFor="clientId">Choose client<sup className="text-center text-danger">
                             *</sup>:</label>
 
                         <Field as="select" className="form-control" name="clientId" id="clientId">
@@ -80,7 +82,7 @@ export const TaskForm = (props) => {
                             )}
                         </Field>
                         <ErrorMessage
-                            name="description"
+                            name="clientId"
                             component="div"
                             className="alert alert-danger"
                         />
@@ -89,6 +91,25 @@ export const TaskForm = (props) => {
                         <label htmlFor="taskDate">Date<sup className="text-center text-danger">
                             *</sup>:</label>
                         <input className="form-control" type="date" value={task.date} id="taskDate" name="date" onChange={handleInputChange} />
+                    </div>
+                    <div className="form-group">
+                        <label htmlFor="taskType">Choose task type<sup className="text-center text-danger">
+                            *</sup>:</label>
+
+                        <Field as="select" className="form-control" name="taskType" id="taskType">
+                            <option value="">Select Task Type</option>
+                            <option key='type-1' value="Income Tax">Income Tax</option>
+                            <option key='type-2' value="GST">GST</option>
+                            <option key='type-3' value="MCA">MCA</option>
+                            <option key='type-4' value="FEMA">FEMA</option>
+                            <option key='type-5' value="DGFT">DGFT</option>
+                            <option key='type-6' value="Others">Others</option>
+                        </Field>
+                        <ErrorMessage
+                            name="taskType"
+                            component="div"
+                            className="alert alert-danger"
+                        />
                     </div>
                     <div className="form-group">
                         <label htmlFor="description">Description<sup className="text-center text-danger">

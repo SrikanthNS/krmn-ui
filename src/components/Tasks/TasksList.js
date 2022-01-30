@@ -112,6 +112,9 @@ const TasksList = () => {
                                     Client
                                 </th>
                                 <th scope="col">
+                                    Type
+                                </th>
+                                <th scope="col">
                                     Desc
                                 </th>
                                 <th scope="col">
@@ -168,6 +171,9 @@ const TasksList = () => {
                                         </td>}
                                         <td>
                                             {clientName}
+                                        </td>
+                                        <td>
+                                            {task?.taskType ? task.taskType : ''}
                                         </td>
                                         <td>
                                             {task.description}
