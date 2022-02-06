@@ -31,6 +31,14 @@ export const retrieveTasks = createAsyncThunk(
     }
 );
 
+export const downloadTasks = createAsyncThunk(
+    "tasks/download",
+    async () => {
+        const res = await TaskService.downloadAllTasks();
+        return res.data;
+    }
+);
+
 export const retrieveCurrentUserTasks = createAsyncThunk(
     "currentUsertasks/retrieve",
     async () => {

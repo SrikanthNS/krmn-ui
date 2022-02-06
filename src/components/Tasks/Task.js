@@ -27,7 +27,7 @@ const Task = (props) => {
         TaskDataService.get(id)
             .then(response => {
                 setCurrentTask(
-                    { ...response.data, ...(response.data?.taskType === undefined || null && { taskType: '' }) });
+                    { ...response.data, ...((response.data?.taskType === undefined || null) && { taskType: '' }) });
             })
             .catch(e => {
                 console.log(e);
