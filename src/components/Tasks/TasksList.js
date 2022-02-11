@@ -108,11 +108,11 @@ const TasksList = () => {
 
                         <div className="d-flex justify-content-end">
                             <button
-                                className="m-3 btn btn-sm btn-primary"
+                                className="m-3 btn btn-sm btn-success"
                                 type="button"
                                 onClick={download}
                             >
-                                Download
+                                Download Excel
                             </button>
                         </div>
 
