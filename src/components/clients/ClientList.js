@@ -78,10 +78,12 @@ const ClientList = () => {
                     </div>
                 </div>
             </div>
+            <div className="col-md-12">
+                <h4>Client List</h4>
+            </div>
             {/* client list table start */}
             <div className="col-md-2 table-responsive-md"></div>
-            <div className="col-md-8 table-responsive-md">
-                <h4>Client List</h4>
+            <div className="col-md-8 tableFixHead">
                 {clients &&
                     <table className="table table-striped">
                         <thead>
