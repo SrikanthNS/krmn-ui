@@ -2,15 +2,17 @@ import React, { useCallback, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import {
-  deleteAllClients,
-  deleteClient,
-  findClientByName,
-  retrieveClients,
-} from "../../slices/clients";
+  //   deleteAllusers,
+  //   deleteuser,
+  //   finduserByName,
+  findUserByName,
+  retrieveAllUsers,
+} from "../../slices/users";
 
-const ClientList = () => {
+const StaffList = () => {
   const [searchName, setSearchName] = useState("");
-  const clients = useSelector((state) => state.client);
+  const { reviewers, users } = useSelector((state) => state.user);
+  console.log("🚀 ~ file: StaffList.js:15 ~ StaffList ~ users:", users);
   const dispatch = useDispatch();
 
   const onChangeSearchName = (e) => {
@@ -25,35 +27,35 @@ const ClientList = () => {
   };
 
   const initFetch = useCallback(() => {
-    dispatch(retrieveClients());
+    dispatch(retrieveAllUsers());
   }, [dispatch]);
 
   useEffect(() => {
     initFetch();
   }, [initFetch]);
 
-  const removeClient = (id) => {
-    if (!window.confirm("Are you sure you want to delete the client ?")) {
-      return;
-    }
-    dispatch(deleteClient({ id }))
-      .unwrap()
-      .catch((e) => {
-        console.log(e);
-      });
-  };
+  //   const removeuser = (id) => {
+  //     if (!window.confirm("Are you sure you want to delete the user ?")) {
+  //       return;
+  //     }
+  //     dispatch(deleteuser({ id }))
+  //       .unwrap()
+  //       .catch((e) => {
+  //         console.log(e);
+  //       });
+  //   };
 
-  const removeAllClients = () => {
-    if (!window.confirm("Are you sure you want to delete all clients ?")) {
-      return;
-    }
-    dispatch(deleteAllClients()).catch((e) => {
-      console.log(e);
-    });
-  };
+  //   const removeAllusers = () => {
+  //     if (!window.confirm("Are you sure you want to delete all users ?")) {
+  //       return;
+  //     }
+  //     dispatch(deleteAllusers()).catch((e) => {
+  //       console.log(e);
+  //     });
+  //   };
 
   const findByName = () => {
-    dispatch(findClientByName({ name: searchName }));
+    dispatch(findUserByName({ name: searchName }));
   };
 
   return (
@@ -63,7 +65,7 @@ const ClientList = () => {
           <input
             type="text"
             className="form-control"
-            placeholder="Search by Name"
+            placeholder="Search by description"
             value={searchName}
             onChange={onChangeSearchName}
             onKeyPress={onSearchSubmit}
@@ -80,42 +82,42 @@ const ClientList = () => {
         </div>
       </div>
       <div className="col-md-12">
-        <h4>Client List</h4>
+        <h4>user List</h4>
       </div>
-      {/* client list table start */}
+      {/* user list table start */}
       <div className="col-md-2 table-responsive-md"></div>
       <div className="col-md-8 tableFixHead">
-        {clients && (
+        {users && (
           <table className="table table-striped">
             <thead>
               <tr>
                 <th scope="col">#</th>
-                <th scope="col">Client</th>
+                <th scope="col">user</th>
                 <th scope="col" colSpan="2">
                   Actions
                 </th>
               </tr>
             </thead>
             <tbody>
-              {clients.map((client, index) => {
+              {users.map((user, index) => {
                 return (
-                  <tr key={`client-row-${index}`}>
+                  <tr key={`user-row-${index}`}>
                     <td>{index + 1}</td>
-                    <td>{client.name}</td>
+                    <td>{user.username}</td>
 
                     <td colSpan="2">
                       <div style={{ display: "inline-flex" }}>
                         <Link
-                          to={"/clients/" + client.id}
+                          to={"/users/" + user.id}
                           className="btn btn-sm btn-warning mr-2 mt-0"
                         >
                           Edit
                         </Link>
                         <button
                           className="btn btn-sm btn-danger mr-2 mt-0"
-                          onClick={() => removeClient(client.id)}
+                          onClick
                         >
-                          Delete
+                          Deactivate
                         </button>
                       </div>
                     </td>
@@ -127,20 +129,11 @@ const ClientList = () => {
         )}
       </div>
       <div className="col-md-2 table-responsive-md"></div>
-      {/* client list table end */}
+      {/* user list table end */}
       <div className="col-md-10">
-        {clients.length === 0 ? (
+        {users.length === 0 && (
           <div className="d-flex justify-content-center">
-            <h5 className="text-center text-info">No Records Found</h5>
-          </div>
-        ) : (
-          <div className="d-flex justify-content-end">
-            <button
-              className="m-3 btn btn-sm btn-danger"
-              onClick={removeAllClients}
-            >
-              Remove All
-            </button>
+            <h5 className="text-center text-info">No Users Found</h5>
           </div>
         )}
       </div>
@@ -148,4 +141,4 @@ const ClientList = () => {
   );
 };
 
-export default ClientList;
+export default StaffList;
