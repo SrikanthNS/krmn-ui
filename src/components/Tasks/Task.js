@@ -13,7 +13,8 @@ const Task = (props) => {
         minutesSpent: null,
         completed: false,
         reviewerId: null,
-        taskType: ""
+        taskType: "",
+        billingCategory: ""
     };
 
     const clients = useSelector(state => state.client);
@@ -54,6 +55,7 @@ const Task = (props) => {
             minutesSpent: currentTask.minutesSpent,
             date: currentTask.date,
             taskType: currentTask.taskType,
+            billingCategory: currentTask.billingCategory
         };
 
         dispatch(updateTask({ id: currentTask.id, data }))
@@ -64,6 +66,7 @@ const Task = (props) => {
                 setMessage("The status was updated successfully!");
             })
             .catch(e => {
+                setMessage(e.message);
                 console.log(e);
             });
     };
@@ -76,7 +79,8 @@ const Task = (props) => {
                 setMessage("The task was updated successfully!");
             })
             .catch(e => {
-                console.log(e);
+                setMessage(e.message);
+                console.log(e.message);
             });
     };
 
@@ -114,7 +118,7 @@ const Task = (props) => {
                             <input className="form-control" type="date" value={moment(currentTask.date).format(('YYYY-MM-DD'))} id="taskDate" name="date" onChange={handleInputChange} />
                         </div>
                         <div className="form-group">
-                            <label htmlFor="taskType">Choose task type<sup className="text-center text-danger">
+                            <label htmlFor="taskType">Choose Task Type<sup className="text-center text-danger">
                                 *</sup>:</label>
 
                             <select className="form-control" onChange={handleInputChange} name="taskType" id="taskType">
@@ -125,6 +129,18 @@ const Task = (props) => {
                                 <option selected={currentTask.taskType === "FEMA"} key='type-4' value="FEMA">FEMA</option>
                                 <option selected={currentTask.taskType === "DGFT"} key='type-5' value="DGFT">DGFT</option>
                                 <option selected={currentTask.taskType === "Others"} key='type-6' value="Others">Others</option>
+                            </select>
+
+                        </div>
+                        <div className="form-group">
+                            <label htmlFor="billingCategory">Choose Billing Category<sup className="text-center text-danger">
+                                *</sup>:</label>
+
+                            <select className="form-control" onChange={handleInputChange} name="billingCategory" id="billingCategory">
+                                <option selected={!currentTask?.billingCategory} value="">Select Billing Category</option>
+                                <option selected={currentTask?.billingCategory === "Billable"}     key='billing-cat-1' value="Billable">Billable</option>
+                                <option selected={currentTask?.billingCategory === "Non-Billable"} key='billing-cat-2' value="Non-Billable">Non-Billable</option>
+                                <option selected={currentTask?.billingCategory === "Retainer"}     key='billing-cat-3' value="Retainer">Retainer</option>
                             </select>
 
                         </div>

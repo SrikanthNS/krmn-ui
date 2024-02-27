@@ -134,6 +134,9 @@ const TasksList = () => {
                                             Type
                                         </th>
                                         <th scope="col">
+                                            Category
+                                        </th>
+                                        <th scope="col">
                                             Desc
                                         </th>
                                         <th scope="col">
@@ -193,6 +196,9 @@ const TasksList = () => {
                                                 </td>
                                                 <td>
                                                     {task?.taskType ? task.taskType : ''}
+                                                </td>
+                                                <td>
+                                                    {task?.billingCategory ? task.billingCategory : ''}
                                                 </td>
                                                 <td>
                                                     {task.description}

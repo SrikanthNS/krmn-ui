@@ -17,7 +17,8 @@ export const TaskForm = (props) => {
         clientId: "",
         reviewerId: null,
         minutesSpent: "",
-        taskType: ""
+        taskType: "",
+        billingCategory: ""
     };
     const [task, setTask] = useState(initialTaskState);
     const [loading, setLoading] = useState(false);
@@ -31,9 +32,9 @@ export const TaskForm = (props) => {
 
 
     const saveTask = (formValues) => {
-        const { description, minutesSpent, clientId, taskType } = formValues
+        const { description, minutesSpent, clientId, taskType, billingCategory } = formValues
         setLoading(true)
-        props.saveTask({ ...task, description, minutesSpent, clientId, taskType }).then(() => {
+        props.saveTask({ ...task, description, minutesSpent, clientId, taskType, billingCategory}).then(() => {
             setLoading(false);
         })
     }
@@ -50,10 +51,11 @@ export const TaskForm = (props) => {
     };
 
     const validationSchema = Yup.object().shape({
-        clientId: Yup.string().required("This field is required!"),
-        description: Yup.string().required("This field is required!"),
-        minutesSpent: Yup.number().required("This field is required!"),
-        taskType: Yup.string().required("This field is required!"),
+        clientId: Yup.string().required("Please choose the Client"),
+        description: Yup.string().required("Please enter the Task Description"),
+        minutesSpent: Yup.number().required("Please enter the Time Spent"),
+        taskType: Yup.string().required("Please choose Task Type"),
+        billingCategory: Yup.string().required("Please choose Billing Category")
     });
     return (
 
@@ -93,7 +95,7 @@ export const TaskForm = (props) => {
                         <input className="form-control" type="date" value={task.date} id="taskDate" name="date" onChange={handleInputChange} />
                     </div>
                     <div className="form-group">
-                        <label htmlFor="taskType">Choose task type<sup className="text-center text-danger">
+                        <label htmlFor="taskType">Choose Task Type<sup className="text-center text-danger">
                             *</sup>:</label>
 
                         <Field as="select" className="form-control" name="taskType" id="taskType">
@@ -111,6 +113,25 @@ export const TaskForm = (props) => {
                             className="alert alert-danger"
                         />
                     </div>
+
+                    <div className="form-group">
+                        <label htmlFor="billingCategory">Choose Billing Category<sup className="text-center text-danger">
+                            *</sup>:</label>
+
+                        <Field as="select" className="form-control" name="billingCategory" id="billingCategory">
+                            <option value="">Select Billing Category</option>
+                            <option key='billing-cat-1' value="Billable">Billable</option>
+                            <option key='billing-cat-2' value="Non-Billable">Non-Billable</option>
+                            <option key='billing-cat-3' value="Retainer">Retainer</option>
+                        </Field>
+                        <ErrorMessage
+                            name="billingCategory"
+                            component="div"
+                            className="alert alert-danger"
+                        />
+                    </div>
+
+
                     <div className="form-group">
                         <label htmlFor="description">Description<sup className="text-center text-danger">
                             *</sup>:</label>
