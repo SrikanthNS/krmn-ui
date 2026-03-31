@@ -10,12 +10,18 @@ const RequiredMark = () => <span className="tf-required">*</span>;
 
 export const TaskForm = ({ saveTask }) => {
   const clients = useSelector((state) => state.client);
-  const { reviewers } = useSelector((state) => state.user);
-  const [taskStatus, setTaskStatus] = useState(false);
+  const { reviewers, users } = useSelector((state) => state.user);
+  const { user: currentUser } = useSelector((state) => state.auth);
+  const [taskStatus, setTaskStatus] = useState("in-progress");
   const [taskDate, setTaskDate] = useState(moment().format("YYYY-MM-DD"));
   const [reviewerId, setReviewerId] = useState(null);
+  const [assigneeId, setAssigneeId] = useState("");
   const [loading, setLoading] = useState(false);
   const { message } = useSelector((state) => state.message);
+
+  const isAdminOrMod = currentUser?.roles?.some(
+    (r) => r === "ROLE_ADMIN" || r === "ROLE_MODERATOR",
+  );
 
   const dispatch = useDispatch();
   useEffect(() => {
@@ -43,12 +49,24 @@ export const TaskForm = ({ saveTask }) => {
 
   const handleSubmit = (formValues) => {
     setLoading(true);
-    saveTask({
+    const isCompleted = taskStatus === "completed";
+    const payload = {
       ...formValues,
       date: taskDate,
-      completed: taskStatus,
-      reviewerId: taskStatus ? reviewerId : null,
-    })
+      completed: isCompleted,
+      status: taskStatus,
+      reviewerId: isCompleted ? reviewerId : null,
+      ...(isAdminOrMod && assigneeId ? { userId: assigneeId } : {}),
+    };
+    console.log(
+      "[TaskForm] DEBUG: isAdminOrMod =",
+      isAdminOrMod,
+      "| assigneeId =",
+      assigneeId,
+      "| payload.userId =",
+      payload.userId,
+    );
+    saveTask(payload)
       .catch((e) => console.error(e))
       .finally(() => setLoading(false));
   };
@@ -78,10 +96,15 @@ export const TaskForm = ({ saveTask }) => {
                   <SearchableSelect
                     id="clientId"
                     placeholder="Choose a client…"
-                    options={(clients || []).map((c) => ({ value: String(c.id), label: c.name }))}
+                    options={(clients || []).map((c) => ({
+                      value: String(c.id),
+                      label: c.name,
+                    }))}
                     value={field.value}
                     onChange={(val) => form.setFieldValue("clientId", val)}
-                    className={errors.clientId && touched.clientId ? "is-invalid" : ""}
+                    className={
+                      errors.clientId && touched.clientId ? "is-invalid" : ""
+                    }
                   />
                 )}
               </Field>
@@ -127,7 +150,9 @@ export const TaskForm = ({ saveTask }) => {
                     ]}
                     value={field.value}
                     onChange={(val) => form.setFieldValue("taskType", val)}
-                    className={errors.taskType && touched.taskType ? "is-invalid" : ""}
+                    className={
+                      errors.taskType && touched.taskType ? "is-invalid" : ""
+                    }
                   />
                 )}
               </Field>
@@ -153,8 +178,14 @@ export const TaskForm = ({ saveTask }) => {
                       { value: "Retainer", label: "Retainer" },
                     ]}
                     value={field.value}
-                    onChange={(val) => form.setFieldValue("billingCategory", val)}
-                    className={errors.billingCategory && touched.billingCategory ? "is-invalid" : ""}
+                    onChange={(val) =>
+                      form.setFieldValue("billingCategory", val)
+                    }
+                    className={
+                      errors.billingCategory && touched.billingCategory
+                        ? "is-invalid"
+                        : ""
+                    }
                   />
                 )}
               </Field>
@@ -216,15 +247,22 @@ export const TaskForm = ({ saveTask }) => {
               <div className="tf-status-toggle">
                 <button
                   type="button"
-                  className={`tf-status-btn ${taskStatus ? "" : "active in-progress"}`}
-                  onClick={() => setTaskStatus(false)}
+                  className={`tf-status-btn ${taskStatus === "todo" ? "active todo" : ""}`}
+                  onClick={() => setTaskStatus("todo")}
+                >
+                  Todo
+                </button>
+                <button
+                  type="button"
+                  className={`tf-status-btn ${taskStatus === "in-progress" ? "active in-progress" : ""}`}
+                  onClick={() => setTaskStatus("in-progress")}
                 >
                   In-Progress
                 </button>
                 <button
                   type="button"
-                  className={`tf-status-btn ${taskStatus ? "active completed" : ""}`}
-                  onClick={() => setTaskStatus(true)}
+                  className={`tf-status-btn ${taskStatus === "completed" ? "active completed" : ""}`}
+                  onClick={() => setTaskStatus("completed")}
                 >
                   Completed
                 </button>
@@ -232,8 +270,32 @@ export const TaskForm = ({ saveTask }) => {
             </div>
           </div>
 
+          {/* Assign To (admin/mod only) */}
+          {isAdminOrMod && (
+            <div className="tf-row tf-row-full tf-slide-in">
+              <div className="tf-field">
+                <label htmlFor="assigneeId">
+                  Assign To{" "}
+                  <small className="text-muted">(leave empty for self)</small>
+                </label>
+                <SearchableSelect
+                  id="assigneeId"
+                  placeholder="Assign to yourself…"
+                  options={(users || [])
+                    .filter((u) => u.isActive !== false)
+                    .map((u) => ({
+                    value: String(u.id),
+                    label: u.username,
+                  }))}
+                  value={assigneeId}
+                  onChange={(val) => setAssigneeId(val || "")}
+                />
+              </div>
+            </div>
+          )}
+
           {/* Reviewer (conditional) */}
-          {taskStatus && (
+          {taskStatus === "completed" && (
             <div className="tf-row tf-row-full tf-slide-in">
               <div className="tf-field">
                 <label htmlFor="reviewerId">
@@ -242,7 +304,10 @@ export const TaskForm = ({ saveTask }) => {
                 <SearchableSelect
                   id="reviewerId"
                   placeholder="Choose an approver…"
-                  options={(reviewers || []).map((r) => ({ value: String(r.id), label: r.username }))}
+                  options={(reviewers || []).map((r) => ({
+                    value: String(r.id),
+                    label: r.username,
+                  }))}
                   value={reviewerId || ""}
                   onChange={(val) => setReviewerId(val || null)}
                 />

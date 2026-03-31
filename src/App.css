@@ -916,6 +916,10 @@ a {
   background-color: #fff3cd;
 }
 
+.tasks-table .row-todo {
+  background-color: #ede9fe;
+}
+
 .tasks-table .th-num,
 .tasks-table .td-num {
   width: 38px;
@@ -996,29 +1000,36 @@ a {
   text-align: center;
 }
 
-/* Status dot icons */
-.status-dot {
+/* Status badges */
+.status-badge {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 12px;
   font-size: 0.75rem;
-  font-weight: 700;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.status-badge-icon {
+  font-size: 0.6rem;
   line-height: 1;
-  cursor: default;
 }
 
-.status-dot.completed {
-  background: #d4edda;
-  color: #28a745;
+.status-badge.todo {
+  background: #ede9fe;
+  color: #7c3aed;
 }
 
-.status-dot.pending {
+.status-badge.in-progress {
   background: #fff3cd;
-  color: #e0a800;
-  font-size: 0.5rem;
+  color: #b45309;
+}
+
+.status-badge.completed {
+  background: #d1fae5;
+  color: #047857;
 }
 
 .tasks-table .th-reviewer,
@@ -1258,7 +1269,7 @@ a {
   transition: all var(--transition);
 }
 
-.tf-status-btn:first-child {
+.tf-status-btn:not(:last-child) {
   border-right: 1px solid #d0d5dd;
 }
 
@@ -1270,6 +1281,11 @@ a {
 .tf-status-btn.active.completed {
   background: #d4edda;
   color: #155724;
+}
+
+.tf-status-btn.active.todo {
+  background: #e2e3f1;
+  color: #6c63ff;
 }
 
 .tf-status-btn:hover:not(.active) {
@@ -1880,6 +1896,10 @@ a {
 
   .tasks-table tbody tr.row-pending {
     border-left: 4px solid #ffc107;
+  }
+
+  .tasks-table tbody tr.row-todo {
+    border-left: 4px solid #6c63ff;
   }
 
   .tasks-table tbody td {

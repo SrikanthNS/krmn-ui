@@ -12,12 +12,14 @@ export const createTask = createAsyncThunk(
       minutesSpent,
       date,
       completed,
+      status,
       clientId,
       reviewerId,
       taskType,
       billingCategory,
+      userId,
     },
-    thunkAPI
+    thunkAPI,
   ) => {
     try {
       const res = await TaskService.create({
@@ -25,10 +27,12 @@ export const createTask = createAsyncThunk(
         minutesSpent,
         date,
         completed,
+        status,
         clientId,
         reviewerId,
         taskType,
         billingCategory,
+        userId,
       });
       return res.data;
     } catch (error) {
@@ -36,7 +40,7 @@ export const createTask = createAsyncThunk(
       thunkAPI.dispatch(setMessage(message));
       return thunkAPI.rejectWithValue();
     }
-  }
+  },
 );
 
 export const retrieveTasks = createAsyncThunk("tasks/retrieve", async () => {
@@ -54,7 +58,7 @@ export const retrieveCurrentUserTasks = createAsyncThunk(
   async () => {
     const res = await TaskService.getAll();
     return res.data;
-  }
+  },
 );
 
 export const updateTask = createAsyncThunk(
@@ -68,7 +72,7 @@ export const updateTask = createAsyncThunk(
       thunkAPI.dispatch(setMessage(message));
       return thunkAPI.rejectWithValue();
     }
-  }
+  },
 );
 
 export const deleteTask = createAsyncThunk("Tasks/delete", async ({ id }) => {
@@ -86,7 +90,7 @@ export const findTasksByTitle = createAsyncThunk(
   async ({ description }) => {
     const res = await TaskService.findByDesc(description);
     return res.data;
-  }
+  },
 );
 
 const TaskSlice = createSlice({

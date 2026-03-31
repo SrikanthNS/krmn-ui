@@ -16,14 +16,25 @@ import MultiSelectDropdown from "../MultiSelectDropdown";
 const truncate = (text, max = 80) =>
   text && text.length > max ? text.slice(0, max) + "…" : text;
 
-const StatusBadge = ({ completed }) => (
-  <span
-    className={completed ? "status-dot completed" : "status-dot pending"}
-    title={completed ? "Completed" : "In-Progress"}
-  >
-    {completed ? "✓" : "●"}
-  </span>
-);
+const StatusBadge = ({ task }) => {
+  const status = task.status || (task.completed ? "completed" : "in-progress");
+  const map = {
+    todo: { cls: "status-badge todo", label: "Todo", icon: "○" },
+    "in-progress": {
+      cls: "status-badge in-progress",
+      label: "In-Progress",
+      icon: "●",
+    },
+    completed: { cls: "status-badge completed", label: "Completed", icon: "✓" },
+  };
+  const s = map[status] || map["in-progress"];
+  return (
+    <span className={s.cls}>
+      <span className="status-badge-icon">{s.icon}</span>
+      <span className="status-badge-label">{s.label}</span>
+    </span>
+  );
+};
 
 const TasksList = () => {
   const allTasks = useSelector((state) => state.tasks);
@@ -123,7 +134,7 @@ const TasksList = () => {
       )
         return false;
       if (filterStatus.length) {
-        const status = t.completed ? "completed" : "in-progress";
+        const status = t.status || (t.completed ? "completed" : "in-progress");
         if (!filterStatus.includes(status)) return false;
       }
       if (filterDateFrom && moment(t.date).isBefore(filterDateFrom, "day"))
@@ -285,7 +296,7 @@ const TasksList = () => {
       "Time (min)",
       "Status",
       "Approver",
-      ...(showUserCol ? ["User"] : []),
+      ...(showUserCol ? ["User", "Assigned By"] : []),
     ];
 
     const rows = dataToExport.map((t) => [
@@ -295,9 +306,23 @@ const TasksList = () => {
       escCsv(t.billingCategory || ""),
       escCsv(t.description || ""),
       t.minutesSpent || 0,
-      t.completed ? "Completed" : "In-Progress",
+      (t.status || (t.completed ? "Completed" : "In-Progress")).replace(
+        /^\w/,
+        (c) => c.toUpperCase(),
+      ),
       escCsv(reviewerMap[t.reviewerId] || "NA"),
-      ...(showUserCol ? [escCsv(userMap[t.userId] || "")] : []),
+      ...(showUserCol
+        ? [
+            escCsv(userMap[t.userId] || ""),
+            escCsv(
+              t.assigner
+                ? t.assigner.username
+                : t.assignedBy
+                  ? userMap[t.assignedBy] || ""
+                  : "",
+            ),
+          ]
+        : []),
     ]);
 
     const csv = [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
@@ -448,6 +473,7 @@ const TasksList = () => {
                 label="Status"
                 placeholder="All Statuses"
                 options={[
+                  { value: "todo", label: "Todo" },
                   { value: "completed", label: "Completed" },
                   { value: "in-progress", label: "In-Progress" },
                 ]}
@@ -522,140 +548,175 @@ const TasksList = () => {
 
       {/* Table */}
       <div className="tasks-table-wrapper">
-          <table className="tasks-table">
-            <thead>
-              <tr>
-                <th className="th-num">#</th>
-                {showUserCol && <th className="th-user">User</th>}
-                <th
-                  className="th-client sortable"
-                  onClick={() => handleSort("client")}
+        <table className="tasks-table">
+          <thead>
+            <tr>
+              <th className="th-num">#</th>
+              {showUserCol && <th className="th-user">User</th>}
+              <th
+                className="th-client sortable"
+                onClick={() => handleSort("client")}
+              >
+                Client <SortArrow col="client" />
+              </th>
+              <th
+                className="th-type sortable"
+                onClick={() => handleSort("type")}
+              >
+                Type <SortArrow col="type" />
+              </th>
+              <th className="th-category">Category</th>
+              <th className="th-desc">Description</th>
+              <th
+                className="th-date sortable"
+                onClick={() => handleSort("date")}
+              >
+                Date <SortArrow col="date" />
+              </th>
+              <th
+                className="th-time sortable"
+                onClick={() => handleSort("time")}
+              >
+                Time <SortArrow col="time" />
+              </th>
+              <th className="th-status">Status</th>
+              <th className="th-reviewer">Approver</th>
+              {showUserCol && <th className="th-user">Assigned By</th>}
+              <th className="th-actions">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {sortedTasks
+              .slice(
+                (currentPage - 1) * ITEMS_PER_PAGE,
+                currentPage * ITEMS_PER_PAGE,
+              )
+              .map((task, index) => (
+                <tr
+                  key={task.id || index}
+                  className={
+                    (task.status ||
+                      (task.completed ? "completed" : "in-progress")) ===
+                    "completed"
+                      ? "row-completed"
+                      : task.status === "todo"
+                        ? "row-todo"
+                        : "row-pending"
+                  }
                 >
-                  Client <SortArrow col="client" />
-                </th>
-                <th
-                  className="th-type sortable"
-                  onClick={() => handleSort("type")}
-                >
-                  Type <SortArrow col="type" />
-                </th>
-                <th className="th-category">Category</th>
-                <th className="th-desc">Description</th>
-                <th
-                  className="th-date sortable"
-                  onClick={() => handleSort("date")}
-                >
-                  Date <SortArrow col="date" />
-                </th>
-                <th
-                  className="th-time sortable"
-                  onClick={() => handleSort("time")}
-                >
-                  Time <SortArrow col="time" />
-                </th>
-                <th className="th-status">Status</th>
-                <th className="th-reviewer">Approver</th>
-                <th className="th-actions">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {sortedTasks
-                .slice(
-                  (currentPage - 1) * ITEMS_PER_PAGE,
-                  currentPage * ITEMS_PER_PAGE,
-                )
-                .map((task, index) => (
-                  <tr
-                    key={task.id || index}
-                    className={task.completed ? "row-completed" : "row-pending"}
+                  <td className="td-num" data-label="#">
+                    {(currentPage - 1) * ITEMS_PER_PAGE + index + 1}
+                  </td>
+                  {showUserCol && (
+                    <td className="td-user" data-label="User">
+                      <span
+                        className="td-user-text"
+                        title={userMap[task.userId] || ""}
+                      >
+                        {userMap[task.userId] || "—"}
+                      </span>
+                    </td>
+                  )}
+                  <td className="td-client" data-label="Client">
+                    <span
+                      className="td-client-text"
+                      title={clientMap[task.clientId] || ""}
+                    >
+                      {clientMap[task.clientId] || "—"}
+                    </span>
+                  </td>
+                  <td
+                    className="td-type"
+                    data-label="Type"
+                    title={task.taskType || ""}
                   >
-                    <td className="td-num" data-label="#">
-                      {(currentPage - 1) * ITEMS_PER_PAGE + index + 1}
-                    </td>
-                    {showUserCol && (
-                      <td
-                        className="td-user"
-                        data-label="User"
+                    {task.taskType || "—"}
+                  </td>
+                  <td
+                    className="td-category"
+                    data-label="Category"
+                    title={task.billingCategory || ""}
+                  >
+                    {task.billingCategory || "—"}
+                  </td>
+                  <td className="td-desc" data-label="Description">
+                    <span
+                      className="td-desc-text"
+                      title={task.description || ""}
+                    >
+                      {task.description}
+                    </span>
+                  </td>
+                  <td
+                    className="td-date"
+                    data-label="Date"
+                    title={moment(task.date).format("DD MMM YYYY")}
+                  >
+                    {moment(task.date).format("DD MMM YYYY")}
+                  </td>
+                  <td
+                    className="td-time"
+                    data-label="Time"
+                    title={`${task.minutesSpent} min`}
+                  >
+                    {task.minutesSpent} min
+                  </td>
+                  <td className="td-status" data-label="Status">
+                    <StatusBadge task={task} />
+                  </td>
+                  <td
+                    className="td-reviewer"
+                    data-label="Approver"
+                    title={reviewerMap[task.reviewerId] || "NA"}
+                  >
+                    {reviewerMap[task.reviewerId] || (
+                      <span
+                        className="text-muted"
+                        style={{ fontStyle: "italic", fontSize: "0.8rem" }}
                       >
-                        <span className="td-user-text" title={userMap[task.userId] || ""}>
-                          {userMap[task.userId] || "—"}
-                        </span>
-                      </td>
+                        NA
+                      </span>
                     )}
-                    <td className="td-client" data-label="Client">
-                      <span className="td-client-text" title={clientMap[task.clientId] || ""}>
-                        {clientMap[task.clientId] || "—"}
+                  </td>
+                  {showUserCol && (
+                    <td className="td-user" data-label="Assigned By">
+                      <span
+                        className="td-user-text"
+                        title={
+                          task.assigner
+                            ? task.assigner.username
+                            : task.assignedBy
+                              ? userMap[task.assignedBy] || ""
+                              : "Self"
+                        }
+                      >
+                        {task.assigner
+                          ? task.assigner.username
+                          : task.assignedBy
+                            ? userMap[task.assignedBy] || "—"
+                            : "Self"}
                       </span>
                     </td>
-                    <td
-                      className="td-type"
-                      data-label="Type"
-                      title={task.taskType || ""}
+                  )}
+                  <td className="td-actions" data-label="Actions">
+                    <Link
+                      to={"/tasks/" + task.id}
+                      className="btn btn-sm btn-warning mr-1"
                     >
-                      {task.taskType || "—"}
-                    </td>
-                    <td
-                      className="td-category"
-                      data-label="Category"
-                      title={task.billingCategory || ""}
+                      Edit
+                    </Link>
+                    <button
+                      className="btn btn-sm btn-danger"
+                      onClick={() => removeTask(task.id)}
                     >
-                      {task.billingCategory || "—"}
-                    </td>
-                    <td className="td-desc" data-label="Description">
-                      <span className="td-desc-text" title={task.description || ""}>
-                        {task.description}
-                      </span>
-                    </td>
-                    <td
-                      className="td-date"
-                      data-label="Date"
-                      title={moment(task.date).format("DD MMM YYYY")}
-                    >
-                      {moment(task.date).format("DD MMM YYYY")}
-                    </td>
-                    <td
-                      className="td-time"
-                      data-label="Time"
-                      title={`${task.minutesSpent} min`}
-                    >
-                      {task.minutesSpent} min
-                    </td>
-                    <td className="td-status" data-label="Status">
-                      <StatusBadge completed={task.completed} />
-                    </td>
-                    <td
-                      className="td-reviewer"
-                      data-label="Approver"
-                      title={reviewerMap[task.reviewerId] || "NA"}
-                    >
-                      {reviewerMap[task.reviewerId] || (
-                        <span
-                          className="text-muted"
-                          style={{ fontStyle: "italic", fontSize: "0.8rem" }}
-                        >
-                          NA
-                        </span>
-                      )}
-                    </td>
-                    <td className="td-actions" data-label="Actions">
-                      <Link
-                        to={"/tasks/" + task.id}
-                        className="btn btn-sm btn-warning mr-1"
-                      >
-                        Edit
-                      </Link>
-                      <button
-                        className="btn btn-sm btn-danger"
-                        onClick={() => removeTask(task.id)}
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-            </tbody>
-          </table>
-        </div>
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              ))}
+          </tbody>
+        </table>
+      </div>
 
       {/* Empty-state message inside table */}
       {sortedTasks.length === 0 && (

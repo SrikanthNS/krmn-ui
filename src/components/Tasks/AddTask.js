@@ -1,8 +1,9 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
+import { Link } from "react-router-dom";
 import { retrieveClients } from "../../slices/clients";
 import { createTask } from "../../slices/tasks";
-import { retrieveReviewers } from "../../slices/users";
+import { retrieveAllUsers, retrieveReviewers } from "../../slices/users";
 import { TaskForm } from "./TaskForm";
 
 const AddTask = () => {
@@ -12,6 +13,7 @@ const AddTask = () => {
   const initFetch = useCallback(() => {
     dispatch(retrieveClients());
     dispatch(retrieveReviewers());
+    dispatch(retrieveAllUsers());
   }, [dispatch]);
 
   useEffect(() => {
@@ -22,23 +24,27 @@ const AddTask = () => {
     const {
       description,
       completed,
+      status,
       date,
       minutesSpent,
       reviewerId,
       clientId,
       taskType,
       billingCategory,
+      userId,
     } = task;
     return dispatch(
       createTask({
         description,
         date,
         completed,
+        status,
         minutesSpent,
         reviewerId,
         clientId,
         taskType,
         billingCategory,
+        userId,
       }),
     )
       .unwrap()
@@ -76,9 +82,9 @@ const AddTask = () => {
                 <button className="btn btn-primary" onClick={addAnother}>
                   + Add Another Task
                 </button>
-                <a href="/tasks" className="btn btn-outline-secondary">
+                <Link to="/taskList" className="btn btn-outline-secondary">
                   View All Tasks
-                </a>
+                </Link>
               </div>
             </div>
           ) : (
