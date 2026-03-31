@@ -1,76 +1,93 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
-import { retrieveClients } from '../../slices/clients';
+import { retrieveClients } from "../../slices/clients";
 import { createTask } from "../../slices/tasks";
-import { retrieveReviewers } from '../../slices/users';
-// import AddIcon from '@mui/icons-material/Add';
+import { retrieveReviewers } from "../../slices/users";
 import { TaskForm } from "./TaskForm";
 
 const AddTask = () => {
-    const [submitted, setSubmitted] = useState(false);
-    const [taskList, setTaskList] = useState([]);
-    const dispatch = useDispatch();
+  const [submitted, setSubmitted] = useState(false);
+  const dispatch = useDispatch();
 
-    const saveTask = (task) => {
-        const { description, completed, date, minutesSpent, reviewerId, clientId, taskType, billingCategory } = task;
-        dispatch(createTask({ description, date, completed, minutesSpent, reviewerId, clientId, taskType, billingCategory }))
-            .unwrap()
-            .then(() => {
-                setTaskList([]);
-                setSubmitted(true);
-            })
-            .catch(e => {
-                console.log("🚀 ~ file: AddTask.js ~ line 34 ~ saveTask ~ e", e.message)
-            });
-    };
+  const initFetch = useCallback(() => {
+    dispatch(retrieveClients());
+    dispatch(retrieveReviewers());
+  }, [dispatch]);
 
-    const initFetch = useCallback(async () => {
-        dispatch(retrieveClients());
-        dispatch(retrieveReviewers());
-        setTaskList([<TaskForm key="task-1" saveTask={saveTask} />]);
-    }, [dispatch])
+  useEffect(() => {
+    initFetch();
+  }, [initFetch]);
 
-    useEffect(() => {
-        initFetch();
-    }, [initFetch])
+  const saveTask = (task) => {
+    const {
+      description,
+      completed,
+      date,
+      minutesSpent,
+      reviewerId,
+      clientId,
+      taskType,
+      billingCategory,
+    } = task;
+    return dispatch(
+      createTask({
+        description,
+        date,
+        completed,
+        minutesSpent,
+        reviewerId,
+        clientId,
+        taskType,
+        billingCategory,
+      }),
+    )
+      .unwrap()
+      .then(() => {
+        setSubmitted(true);
+      });
+  };
 
+  const addAnother = () => {
+    setSubmitted(false);
+  };
 
-    const newTask = () => {
-        setTaskList([...taskList, <TaskForm key="task1" saveTask={saveTask} />]);
-        setSubmitted(false);
-    };
-
-
-
-    return (
-        <div className="col-md-12 table-responsive-md">
-            <h4>New Task</h4>
-            <hr></hr>
-            <div className="submit-form" >
-                {submitted ? (
-                    <div>
-                        <h4>You submitted successfully!</h4>
-                        <button className="btn btn-success" onClick={(clients, reviewers) => newTask()}>
-                            Add
-                        </button>
-                    </div>
-                ) :
-                    (<div className="row">
-                        {/* <div >
-                        <button className="btn btn-success" onClick={newTask}>
-                            Add <AddIcon />
-                        </button>
-                    </div> */}
-                        <div className="col-md-12" style={{ display: 'flex', flexDirection: 'column' }} >
-                            {taskList.map(eachTask => eachTask)}
-                        </div>
-                    </div >)
-                }
-
-            </div >
+  return (
+    <div className="add-task-page">
+      <div className="add-task-card">
+        <div className="add-task-card-header">
+          <h4>
+            <span role="img" aria-label="task">
+              &#128221;
+            </span>{" "}
+            New Task
+          </h4>
+          <p className="add-task-subtitle">
+            Fill in the details below to log a new task
+          </p>
         </div>
 
-    );
+        <div className="add-task-card-body">
+          {submitted ? (
+            <div className="success-state">
+              <div className="success-icon">&#10004;</div>
+              <h5>Task Submitted Successfully!</h5>
+              <p className="text-muted">Your task has been logged and saved.</p>
+              <div className="success-actions">
+                <button className="btn btn-primary" onClick={addAnother}>
+                  + Add Another Task
+                </button>
+                <a href="/tasks" className="btn btn-outline-secondary">
+                  View All Tasks
+                </a>
+              </div>
+            </div>
+          ) : (
+            <TaskForm saveTask={saveTask} />
+          )}
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default AddTask;

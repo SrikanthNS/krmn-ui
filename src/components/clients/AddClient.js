@@ -1,69 +1,50 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useDispatch } from "react-redux";
 import { createClient } from "../../slices/clients";
-// import AddIcon from '@mui/icons-material/Add';
 import { ClientForm } from "./ClientForm";
 
 const AddClient = () => {
     const [submitted, setSubmitted] = useState(false);
-    const [clientList, setClientList] = useState([]);
     const dispatch = useDispatch();
 
     const saveClient = (client) => {
         const { name } = client;
-        dispatch(createClient({ name }))
+        return dispatch(createClient({ name }))
             .unwrap()
-            .then(() => {
-                setClientList([]);
-                setSubmitted(true);
-            })
-            .catch(e => {
-                console.log("🚀 ~ file: AddClient.js ~ line 34 ~ saveClient ~ e", e.message)
-            });
+            .then(() => setSubmitted(true))
+            .catch((e) => console.log(e.message));
     };
-
-    const initFetch = useCallback(async () => {
-        setClientList([<ClientForm key="client-1" saveClient={saveClient} />]);
-    }, [dispatch])
-
-    useEffect(() => {
-        initFetch();
-    }, [initFetch])
-
-
-    const newClient = () => {
-        setClientList([...clientList, <ClientForm key="client-1" saveClient={saveClient} />]);
-        setSubmitted(false);
-    };
-
-
 
     return (
-        <div className="col-md-12 table-responsive-md">
-            <h4>Add New Client</h4>
-            <hr></hr>
-            <div className="submit-form" >
-                {submitted ? (
-                    <div>
-                        <h4>You submitted successfully!</h4>
-                        <button className="btn btn-success" onClick={() => newClient()}>
-                            Add
-                        </button>
-                    </div>
-                ) :
-                    (<div className="row">
-                        {/* <div >
-                        <button className="btn btn-success" onClick={newClient}>
-                            Add <AddIcon />
-                        </button>
-                    </div> */}
-                        <div className="col-md-12" style={{ display: 'flex', flexDirection: 'column' }} >
-                            {clientList.map(eachClient => eachClient)}
+        <div className="auth-page">
+            <div className="auth-card" style={{ maxWidth: 480 }}>
+                <div className="auth-card-header">
+                    <div className="auth-avatar">&#128101;</div>
+                    <h2>Add Client</h2>
+                    <p>Register a new client for task tracking</p>
+                </div>
+                <div className="auth-card-body">
+                    {submitted ? (
+                        <div className="success-state">
+                            <div className="success-icon">&#10004;</div>
+                            <h5>Client Created Successfully!</h5>
+                            <div className="success-actions">
+                                <button
+                                    className="btn btn-primary"
+                                    onClick={() => setSubmitted(false)}
+                                >
+                                    + Add Another
+                                </button>
+                                <a href="/clientList" className="btn btn-outline-secondary">
+                                    View All Clients
+                                </a>
+                            </div>
                         </div>
-                    </div >)
-                }
-
-            </div >
+                    ) : (
+                        <ClientForm saveClient={saveClient} />
+                    )}
+                </div>
+            </div>
         </div>
     );
 };

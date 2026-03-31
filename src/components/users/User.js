@@ -4,27 +4,15 @@ import UserService from "../../services/user.service";
 import { updateUser } from "../../slices/users";
 
 const User = (props) => {
-  const initialClientState = {
-    id: null,
-    name: "",
-  };
-  const [currentUser, setCurrentUser] = useState(initialClientState);
+  const [currentUser, setCurrentUser] = useState({ id: null, username: "", email: "" });
   const [message, setMessage] = useState("");
+  const [isError, setIsError] = useState(false);
   const dispatch = useDispatch();
 
-  const getUser = (id) => {
-    UserService.get(id)
-      .then((response) => {
-        console.log("🚀 ~ file: User.js:18 ~ .then ~ response:", response);
-        setCurrentUser(response.data);
-      })
-      .catch((e) => {
-        console.log(e);
-      });
-  };
-
   useEffect(() => {
-    getUser(props.match.params.id);
+    UserService.get(props.match.params.id)
+      .then((response) => setCurrentUser(response.data))
+      .catch((e) => console.log(e));
   }, [props.match.params.id]);
 
   const handleInputChange = (event) => {
@@ -35,62 +23,67 @@ const User = (props) => {
   const updateContent = () => {
     dispatch(updateUser({ id: currentUser.id, data: currentUser }))
       .unwrap()
-      .then((response) => {
-        console.log("🚀 ~ file: User.js:38 ~ .then ~ response:", response);
-        setMessage("The User was updated successfully!");
+      .then(() => {
+        setMessage("User updated successfully!");
+        setIsError(false);
       })
-      .catch((e) => {
-        console.log(e);
+      .catch(() => {
+        setMessage("Failed to update user.");
+        setIsError(true);
       });
   };
-  console.log("🚀 ~ file: User.js:86 ~ User ~ currentUser:", currentUser);
-  return (
-    <div className="col-md-12 table-responsive-md">
-      <h4>Edit User</h4>
-      <hr></hr>
-      {currentUser && (
-        <div className="edit-form">
-          <form>
-            <div className="form-group">
-              <label htmlFor="username">Name</label>
-              <input
-                type="text"
-                className="form-control"
-                id="username"
-                name="username"
-                value={currentUser.username}
-                onChange={handleInputChange}
-              />
-            </div>
-            <div className="form-group">
-              <label htmlFor="email">Email</label>
-              <input
-                type="text"
-                className="form-control"
-                id="email"
-                name="email"
-                value={currentUser.email}
-                onChange={handleInputChange}
-              />
-            </div>
-          </form>
 
-          <button
-            type="submit"
-            className="btn btn-md mr-2 btn-success"
-            onClick={updateContent}
-          >
-            Update
-          </button>
-          <button
-            className="btn btn-md btn-primary mr-2"
-            onClick={() => props.history.push("/staffList")}
-          >
-            {`< Go Back`}
-          </button>
-          <p>{message}</p>
+  return (
+    <div className="auth-page">
+      <div className="auth-card" style={{ maxWidth: 480 }}>
+        <div className="auth-card-header">
+          <div className="auth-avatar">&#9998;</div>
+          <h2>Edit User</h2>
         </div>
-      )}
+        <div className="auth-card-body">
+          {currentUser && (
+            <form onSubmit={(e) => { e.preventDefault(); updateContent(); }}>
+              <div className="auth-field">
+                <label htmlFor="username">Username</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  id="username"
+                  name="username"
+                  value={currentUser.username}
+                  onChange={handleInputChange}
+                />
+              </div>
+              <div className="auth-field">
+                <label htmlFor="email">Email</label>
+                <input
+                  type="email"
+                  className="form-control"
+                  id="email"
+                  name="email"
+                  value={currentUser.email}
+                  onChange={handleInputChange}
+                />
+              </div>
+              <div className="d-flex gap-2 mt-3">
+                <button type="submit" className="btn btn-primary flex-fill">Update</button>
+                <button
+                  type="button"
+                  className="btn btn-outline-secondary flex-fill"
+                  onClick={() => props.history.push("/staffList")}
+                >
+                  &larr; Back
+                </button>
+              </div>
+              {message && (
+                <div className={"auth-message " + (isError ? "error" : "success")} style={{ marginTop: 12 }}>
+                  {message}
+                </div>
+              )}
+            </form>
+          )}
+        </div>
+      </div>
     </div>
   );
 };

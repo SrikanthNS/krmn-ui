@@ -7,22 +7,13 @@ import {
   findClientByName,
   retrieveClients,
 } from "../../slices/clients";
+import Pagination, { ITEMS_PER_PAGE } from "../Pagination";
 
 const ClientList = () => {
   const [searchName, setSearchName] = useState("");
   const clients = useSelector((state) => state.client);
   const dispatch = useDispatch();
-
-  const onChangeSearchName = (e) => {
-    const searchName = e.target.value;
-    setSearchName(searchName);
-  };
-
-  const onSearchSubmit = (e) => {
-    if (e.code === "Enter") {
-      findByName();
-    }
-  };
+  const [currentPage, setCurrentPage] = useState(1);
 
   const initFetch = useCallback(() => {
     dispatch(retrieveClients());
@@ -33,86 +24,78 @@ const ClientList = () => {
   }, [initFetch]);
 
   const removeClient = (id) => {
-    if (!window.confirm("Are you sure you want to delete the client ?")) {
-      return;
-    }
+    if (!window.confirm("Are you sure you want to delete this client?")) return;
     dispatch(deleteClient({ id }))
       .unwrap()
-      .catch((e) => {
-        console.log(e);
-      });
+      .catch((e) => console.log(e));
   };
 
   const removeAllClients = () => {
-    if (!window.confirm("Are you sure you want to delete all clients ?")) {
-      return;
-    }
-    dispatch(deleteAllClients()).catch((e) => {
-      console.log(e);
-    });
+    if (!window.confirm("Are you sure you want to delete all clients?")) return;
+    dispatch(deleteAllClients()).catch((e) => console.log(e));
   };
 
   const findByName = () => {
+    setCurrentPage(1);
     dispatch(findClientByName({ name: searchName }));
   };
 
   return (
-    <div className=" row">
-      <div className="col-md-12">
-        <div className="input-group mb-3">
-          <input
-            type="text"
-            className="form-control"
-            placeholder="Search by Name"
-            value={searchName}
-            onChange={onChangeSearchName}
-            onKeyPress={onSearchSubmit}
-          />
-          <div className="input-group-append">
-            <button
-              className="btn btn-outline-secondary"
-              type="button"
-              onClick={findByName}
-            >
-              Search
+    <div className="page-container">
+      <div className="page-header">
+        <h4 className="page-title">&#128101; Clients</h4>
+        <div className="page-header-actions">
+          {clients.length > 0 && (
+            <button className="btn btn-sm btn-outline-danger" onClick={removeAllClients}>
+              Remove All
             </button>
-          </div>
+          )}
+          <Link to="/addClient" className="btn btn-sm btn-primary">+ Add Client</Link>
         </div>
       </div>
-      <div className="col-md-12">
-        <h4>Client List</h4>
-      </div>
-      {/* client list table start */}
-      <div className="col-md-2 table-responsive-md"></div>
-      <div className="col-md-8 tableFixHead">
-        {clients && (
-          <table className="table table-striped">
-            <thead>
-              <tr>
-                <th scope="col">#</th>
-                <th scope="col">Client</th>
-                <th scope="col" colSpan="2">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {clients.map((client, index) => {
-                return (
-                  <tr key={`client-row-${index}`}>
-                    <td>{index + 1}</td>
-                    <td>{client.name}</td>
 
-                    <td colSpan="2">
-                      <div style={{ display: "inline-flex" }}>
-                        <Link
-                          to={"/clients/" + client.id}
-                          className="btn btn-sm btn-warning mr-2 mt-0"
-                        >
+      <div className="search-bar">
+        <input
+          type="text"
+          className="form-control"
+          placeholder="Search by client name..."
+          value={searchName}
+          onChange={(e) => setSearchName(e.target.value)}
+          onKeyPress={(e) => e.code === "Enter" && findByName()}
+        />
+        <button className="btn btn-outline-secondary" onClick={findByName}>
+          Search
+        </button>
+      </div>
+
+      <div className="list-table-wrapper">
+        <table className="list-table">
+          <thead>
+            <tr>
+              <th style={{ width: 50 }}>#</th>
+              <th>Client Name</th>
+              <th style={{ width: 160 }}>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {clients.length === 0 ? (
+              <tr>
+                <td colSpan="3" className="list-empty-row">No clients found</td>
+              </tr>
+            ) : (
+              clients
+                .slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE)
+                .map((client, index) => (
+                  <tr key={client.id}>
+                    <td data-label="#">{(currentPage - 1) * ITEMS_PER_PAGE + index + 1}</td>
+                    <td data-label="Name"><strong>{client.name}</strong></td>
+                    <td data-label="">
+                      <div className="action-btns">
+                        <Link to={"/clients/" + client.id} className="btn btn-sm btn-warning">
                           Edit
                         </Link>
                         <button
-                          className="btn btn-sm btn-danger mr-2 mt-0"
+                          className="btn btn-sm btn-danger"
                           onClick={() => removeClient(client.id)}
                         >
                           Delete
@@ -120,30 +103,21 @@ const ClientList = () => {
                       </div>
                     </td>
                   </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        )}
+                ))
+            )}
+          </tbody>
+        </table>
       </div>
-      <div className="col-md-2 table-responsive-md"></div>
-      {/* client list table end */}
-      <div className="col-md-10">
-        {clients.length === 0 ? (
-          <div className="d-flex justify-content-center">
-            <h5 className="text-center text-info">No Records Found</h5>
-          </div>
-        ) : (
-          <div className="d-flex justify-content-end">
-            <button
-              className="m-3 btn btn-sm btn-danger"
-              onClick={removeAllClients}
-            >
-              Remove All
-            </button>
-          </div>
-        )}
-      </div>
+
+      {clients && clients.length > ITEMS_PER_PAGE && (
+        <div className="d-flex justify-content-center mt-3">
+          <Pagination
+            currentPage={currentPage}
+            totalItems={clients.length}
+            onPageChange={setCurrentPage}
+          />
+        </div>
+      )}
     </div>
   );
 };

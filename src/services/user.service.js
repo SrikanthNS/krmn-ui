@@ -33,6 +33,14 @@ const update = (id, data) => {
   return http.put(`/users/${id}`, data, { headers: authHeader() });
 };
 
+const deactivate = (id) => {
+  return http.put(`/users/${id}/deactivate`, {}, { headers: authHeader() });
+};
+
+const activate = (id) => {
+  return http.put(`/users/${id}/activate`, {}, { headers: authHeader() });
+};
+
 const get = (id) => {
   console.log("🚀 ~ file: user.service.js:37 ~ get ~ id:", id);
   return http.get(`/users/${id}`, { headers: authHeader() });
@@ -48,6 +56,8 @@ const UserService = {
   retrieveAllUsers,
   findByName,
   update,
+  deactivate,
+  activate,
 };
 
 export default UserService;

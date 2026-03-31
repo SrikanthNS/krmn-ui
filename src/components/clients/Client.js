@@ -4,27 +4,15 @@ import ClientService from "../../services/client.service";
 import { updateClient } from "../../slices/clients";
 
 const Client = (props) => {
-  const initialClientState = {
-    id: null,
-    name: "",
-  };
-  const [currentClient, setCurrentClient] = useState(initialClientState);
+  const [currentClient, setCurrentClient] = useState({ id: null, name: "" });
   const [message, setMessage] = useState("");
+  const [isError, setIsError] = useState(false);
   const dispatch = useDispatch();
 
-  const getClient = (id) => {
-    ClientService.get(id)
-      .then((response) => {
-        console.log("🚀 ~ file: Client.js:18 ~ .then ~ response:", response);
-        setCurrentClient(response.data);
-      })
-      .catch((e) => {
-        console.log(e);
-      });
-  };
-
   useEffect(() => {
-    getClient(props.match.params.id);
+    ClientService.get(props.match.params.id)
+      .then((response) => setCurrentClient(response.data))
+      .catch((e) => console.log(e));
   }, [props.match.params.id]);
 
   const handleInputChange = (event) => {
@@ -35,54 +23,56 @@ const Client = (props) => {
   const updateContent = () => {
     dispatch(updateClient({ id: currentClient.id, data: currentClient }))
       .unwrap()
-      .then((response) => {
-        console.log("🚀 ~ file: Client.js:38 ~ .then ~ response:", response);
-        setMessage("The Client was updated successfully!");
+      .then(() => {
+        setMessage("Client updated successfully!");
+        setIsError(false);
       })
-      .catch((e) => {
-        console.log(e);
+      .catch(() => {
+        setMessage("Failed to update client.");
+        setIsError(true);
       });
   };
-  console.log(
-    "🚀 ~ file: Client.js:86 ~ Client ~ currentClient:",
-    currentClient
-  );
-  return (
-    <div className="col-md-12 table-responsive-md">
-      <h4>Edit Client</h4>
-      <hr></hr>
-      {currentClient && (
-        <div className="edit-form">
-          <form>
-            <div className="form-group">
-              <label htmlFor="name">Name</label>
-              <input
-                type="text"
-                className="form-control"
-                id="name"
-                name="name"
-                value={currentClient.name}
-                onChange={handleInputChange}
-              />
-            </div>
-          </form>
 
-          <button
-            type="submit"
-            className="btn btn-md mr-2 btn-success"
-            onClick={updateContent}
-          >
-            Update
-          </button>
-          <button
-            className="btn btn-md btn-primary mr-2"
-            onClick={() => props.history.push("/clientList")}
-          >
-            {`< Go Back`}
-          </button>
-          <p>{message}</p>
+  return (
+    <div className="auth-page">
+      <div className="auth-card" style={{ maxWidth: 480 }}>
+        <div className="auth-card-header">
+          <div className="auth-avatar">&#9998;</div>
+          <h2>Edit Client</h2>
         </div>
-      )}
+        <div className="auth-card-body">
+          {currentClient && (
+            <form onSubmit={(e) => { e.preventDefault(); updateContent(); }}>
+              <div className="auth-field">
+                <label htmlFor="name">Client Name</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  id="name"
+                  name="name"
+                  value={currentClient.name}
+                  onChange={handleInputChange}
+                />
+              </div>
+              <div className="d-flex gap-2 mt-3">
+                <button type="submit" className="btn btn-primary flex-fill">Update</button>
+                <button
+                  type="button"
+                  className="btn btn-outline-secondary flex-fill"
+                  onClick={() => props.history.push("/clientList")}
+                >
+                  &larr; Back
+                </button>
+              </div>
+              {message && (
+                <div className={"auth-message " + (isError ? "error" : "success")} style={{ marginTop: 12 }}>
+                  {message}
+                </div>
+              )}
+            </form>
+          )}
+        </div>
+      </div>
     </div>
   );
 };

@@ -7,7 +7,6 @@ import { clearMessage } from "../slices/message";
 
 const Register = () => {
     const [successful, setSuccessful] = useState(false);
-
     const { message } = useSelector((state) => state.message);
     const dispatch = useDispatch();
 
@@ -15,130 +14,109 @@ const Register = () => {
         dispatch(clearMessage());
     }, [dispatch]);
 
-    const initialValues = {
-        username: "",
-        email: "",
-        password: "",
-    };
+    const initialValues = { username: "", email: "", password: "" };
 
     const validationSchema = Yup.object().shape({
         username: Yup.string()
-            .test(
-                "len",
-                "The username must be between 3 and 20 characters.",
-                (val) =>
-                    val &&
-                    val.toString().length >= 3 &&
-                    val.toString().length <= 20
-            )
-            .required("This field is required!"),
+            .min(3, "Must be at least 3 characters")
+            .max(20, "Must be 20 characters or less")
+            .required("Username is required"),
         email: Yup.string()
-            .email("This is not a valid email.")
-            .required("This field is required!"),
+            .email("Enter a valid email")
+            .required("Email is required"),
         password: Yup.string()
-            .test(
-                "len",
-                "The password must be between 6 and 40 characters.",
-                (val) =>
-                    val &&
-                    val.toString().length >= 6 &&
-                    val.toString().length <= 40
-            )
-            .required("This field is required!"),
+            .min(6, "Must be at least 6 characters")
+            .max(40, "Must be 40 characters or less")
+            .required("Password is required"),
     });
 
     const handleRegister = (formValue) => {
         const { username, email, password } = formValue;
-
         setSuccessful(false);
-
         dispatch(register({ username, email, password }))
             .unwrap()
-            .then(() => {
-                setSuccessful(true);
-            })
-            .catch(() => {
-                setSuccessful(false);
-            });
+            .then(() => setSuccessful(true))
+            .catch(() => setSuccessful(false));
     };
 
     return (
-        <div className="col-md-12 table-responsive-md">
-            <h4>Add Staff</h4>
-            <hr></hr>
-            <div className="col-md-12 signup-form">
-
-
-                <div className="card card-container">
-                    <img
-                        src="//ssl.gstatic.com/accounts/ui/avatar_2x.png"
-                        alt="profile-img"
-                        className="profile-img-card"
-                    />
+        <div className="auth-page">
+            <div className="auth-card" style={{ maxWidth: 480 }}>
+                <div className="auth-card-header">
+                    <div className="auth-avatar">&#128100;</div>
+                    <h2>Add Staff</h2>
+                    <p>Create a new staff account</p>
+                </div>
+                <div className="auth-card-body">
                     <Formik
                         initialValues={initialValues}
                         validationSchema={validationSchema}
                         onSubmit={handleRegister}
                     >
-                        <Form>
-                            {!successful && (
-                                <div>
-                                    <div className="form-group">
-                                        <label htmlFor="username">Username</label>
-                                        <Field name="username" type="text" className="form-control" />
-                                        <ErrorMessage
-                                            name="username"
-                                            component="div"
-                                            className="alert alert-danger"
-                                        />
-                                    </div>
-
-                                    <div className="form-group">
-                                        <label htmlFor="email">Email</label>
-                                        <Field name="email" type="email" className="form-control" />
-                                        <ErrorMessage
-                                            name="email"
-                                            component="div"
-                                            className="alert alert-danger"
-                                        />
-                                    </div>
-
-                                    <div className="form-group">
-                                        <label htmlFor="password">Set Password</label>
-                                        <Field
-                                            name="password"
-                                            type="text"
-                                            className="form-control"
-                                        />
-                                        <ErrorMessage
-                                            name="password"
-                                            component="div"
-                                            className="alert alert-danger"
-                                        />
-                                    </div>
-
-                                    <div className="form-group">
-                                        <button type="submit" className="btn btn-primary btn-block">Create</button>
-                                    </div>
-                                </div>
-                            )}
-                        </Form>
+                        {({ errors, touched }) => (
+                            <Form>
+                                {!successful && (
+                                    <>
+                                        <div className="auth-field">
+                                            <label htmlFor="username">Username</label>
+                                            <Field
+                                                name="username"
+                                                type="text"
+                                                placeholder="Enter username"
+                                                className={`form-control ${errors.username && touched.username ? "is-invalid" : ""}`}
+                                            />
+                                            <ErrorMessage name="username" component="div" className="auth-error" />
+                                        </div>
+                                        <div className="auth-field">
+                                            <label htmlFor="email">Email</label>
+                                            <Field
+                                                name="email"
+                                                type="email"
+                                                placeholder="Enter email address"
+                                                className={`form-control ${errors.email && touched.email ? "is-invalid" : ""}`}
+                                            />
+                                            <ErrorMessage name="email" component="div" className="auth-error" />
+                                        </div>
+                                        <div className="auth-field">
+                                            <label htmlFor="password">Set Password</label>
+                                            <Field
+                                                name="password"
+                                                type="text"
+                                                placeholder="At least 6 characters"
+                                                className={`form-control ${errors.password && touched.password ? "is-invalid" : ""}`}
+                                            />
+                                            <ErrorMessage name="password" component="div" className="auth-error" />
+                                        </div>
+                                        <button type="submit" className="btn-auth-submit">
+                                            Create Staff Account
+                                        </button>
+                                    </>
+                                )}
+                            </Form>
+                        )}
                     </Formik>
                 </div>
-
                 {message && (
-                    <div className="form-group">
-                        <div
-                            className={successful ? "alert alert-success" : "alert alert-danger"}
-                            role="alert"
+                    <div className={`auth-message ${successful ? "success" : "error"}`}>
+                        {message}
+                    </div>
+                )}
+                {successful && (
+                    <div className="auth-card-body" style={{ paddingTop: 0 }}>
+                        <button
+                            className="btn-auth-submit"
+                            onClick={() => {
+                                setSuccessful(false);
+                                dispatch(clearMessage());
+                            }}
                         >
-                            {message}
-                        </div>
+                            + Add Another
+                        </button>
                     </div>
                 )}
             </div>
         </div>
     );
-}
+};
 
 export default Register;

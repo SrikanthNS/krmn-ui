@@ -1,200 +1,274 @@
 import { ErrorMessage, Field, Form, Formik } from "formik";
-import moment from 'moment';
+import moment from "moment";
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import * as Yup from "yup";
 import { clearMessage } from "../../slices/message";
+import SearchableSelect from "../SearchableSelect";
 
-export const TaskForm = (props) => {
-    const clients = useSelector(state => state.client);
-    const { reviewers } = useSelector(state => state.user);
-    const [taskStatus, updateStatus] = useState(false);
-    const todaysDate = moment().format('YYYY-MM-DD');
-    const initialTaskState = {
-        description: "",
-        completed: false,
-        date: todaysDate,
-        clientId: "",
-        reviewerId: null,
-        minutesSpent: "",
-        taskType: "",
-        billingCategory: ""
-    };
-    const [task, setTask] = useState(initialTaskState);
-    const [loading, setLoading] = useState(false);
-    const { message } = useSelector((state) => state.message);
+const RequiredMark = () => <span className="tf-required">*</span>;
 
-    const dispatch = useDispatch();
-    useEffect(() => {
-        dispatch(clearMessage());
-    }, [dispatch]);
+export const TaskForm = ({ saveTask }) => {
+  const clients = useSelector((state) => state.client);
+  const { reviewers } = useSelector((state) => state.user);
+  const [taskStatus, setTaskStatus] = useState(false);
+  const [taskDate, setTaskDate] = useState(moment().format("YYYY-MM-DD"));
+  const [reviewerId, setReviewerId] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const { message } = useSelector((state) => state.message);
 
+  const dispatch = useDispatch();
+  useEffect(() => {
+    dispatch(clearMessage());
+  }, [dispatch]);
 
+  const initialValues = {
+    description: "",
+    clientId: "",
+    minutesSpent: "",
+    taskType: "",
+    billingCategory: "",
+  };
 
-    const saveTask = (formValues) => {
-        const { description, minutesSpent, clientId, taskType, billingCategory } = formValues
-        setLoading(true)
-        props.saveTask({ ...task, description, minutesSpent, clientId, taskType, billingCategory}).then(() => {
-            setLoading(false);
-        })
-    }
+  const validationSchema = Yup.object().shape({
+    clientId: Yup.string().required("Client is required"),
+    description: Yup.string().required("Description is required"),
+    minutesSpent: Yup.number()
+      .typeError("Must be a number")
+      .positive("Must be positive")
+      .required("Time spent is required"),
+    taskType: Yup.string().required("Task type is required"),
+    billingCategory: Yup.string().required("Billing category is required"),
+  });
 
-    const handleInputChange = event => {
-        const { name, value } = event.target;
-        setTask({ ...task, [name]: value });
-    };
+  const handleSubmit = (formValues) => {
+    setLoading(true);
+    saveTask({
+      ...formValues,
+      date: taskDate,
+      completed: taskStatus,
+      reviewerId: taskStatus ? reviewerId : null,
+    })
+      .catch((e) => console.error(e))
+      .finally(() => setLoading(false));
+  };
 
-    const handleStatus = (e, value) => {
-        e.preventDefault();
-        updateStatus(value);
-        setTask({ ...task, completed: value });
-    };
+  return (
+    <Formik
+      initialValues={initialValues}
+      validationSchema={validationSchema}
+      onSubmit={handleSubmit}
+    >
+      {({ errors, touched }) => (
+        <Form className="tf-form">
+          {message && (
+            <div className="alert alert-danger tf-alert" role="alert">
+              {message}
+            </div>
+          )}
 
-    const validationSchema = Yup.object().shape({
-        clientId: Yup.string().required("Please choose the Client"),
-        description: Yup.string().required("Please enter the Task Description"),
-        minutesSpent: Yup.number().required("Please enter the Time Spent"),
-        taskType: Yup.string().required("Please choose Task Type"),
-        billingCategory: Yup.string().required("Please choose Billing Category")
-    });
-    return (
+          {/* Row 1: Client + Date */}
+          <div className="tf-row">
+            <div className="tf-field">
+              <label htmlFor="clientId">
+                Client <RequiredMark />
+              </label>
+              <Field name="clientId">
+                {({ field, form }) => (
+                  <SearchableSelect
+                    id="clientId"
+                    placeholder="Choose a client…"
+                    options={(clients || []).map((c) => ({ value: String(c.id), label: c.name }))}
+                    value={field.value}
+                    onChange={(val) => form.setFieldValue("clientId", val)}
+                    className={errors.clientId && touched.clientId ? "is-invalid" : ""}
+                  />
+                )}
+              </Field>
+              <ErrorMessage
+                name="clientId"
+                component="div"
+                className="tf-error"
+              />
+            </div>
 
-        <Formik
-            initialValues={initialTaskState}
-            validationSchema={validationSchema}
-            onSubmit={saveTask}
-        >
-            <Form>
-                <div>
-                    {message && (
-                        <div className="form-group">
-                            <div className="alert alert-danger" role="alert">
-                                {message}
-                            </div>
-                        </div>
-                    )}
-                    <div className="form-group">
-                        <label htmlFor="clientId">Choose client<sup className="text-center text-danger">
-                            *</sup>:</label>
+            <div className="tf-field">
+              <label htmlFor="taskDate">
+                Date <RequiredMark />
+              </label>
+              <input
+                type="date"
+                id="taskDate"
+                className="form-control"
+                value={taskDate}
+                onChange={(e) => setTaskDate(e.target.value)}
+              />
+            </div>
+          </div>
 
-                        <Field as="select" className="form-control" name="clientId" id="clientId">
-                            <option value="">Select Client</option>
-                            {clients.map(e =>
-                                <option key={`client-${e.id}`} value={e.id}>{e.name}</option>
-                            )}
-                        </Field>
-                        <ErrorMessage
-                            name="clientId"
-                            component="div"
-                            className="alert alert-danger"
-                        />
-                    </div>
-                    <div className="form-group">
-                        <label htmlFor="taskDate">Date<sup className="text-center text-danger">
-                            *</sup>:</label>
-                        <input className="form-control" type="date" value={task.date} id="taskDate" name="date" onChange={handleInputChange} />
-                    </div>
-                    <div className="form-group">
-                        <label htmlFor="taskType">Choose Task Type<sup className="text-center text-danger">
-                            *</sup>:</label>
+          {/* Row 2: Task Type + Billing Category */}
+          <div className="tf-row">
+            <div className="tf-field">
+              <label htmlFor="taskType">
+                Task Type <RequiredMark />
+              </label>
+              <Field name="taskType">
+                {({ field, form }) => (
+                  <SearchableSelect
+                    id="taskType"
+                    placeholder="Pick a task type…"
+                    options={[
+                      { value: "Income Tax", label: "Income Tax" },
+                      { value: "GST", label: "GST" },
+                      { value: "MCA", label: "MCA" },
+                      { value: "FEMA", label: "FEMA" },
+                      { value: "DGFT", label: "DGFT" },
+                      { value: "Others", label: "Others" },
+                    ]}
+                    value={field.value}
+                    onChange={(val) => form.setFieldValue("taskType", val)}
+                    className={errors.taskType && touched.taskType ? "is-invalid" : ""}
+                  />
+                )}
+              </Field>
+              <ErrorMessage
+                name="taskType"
+                component="div"
+                className="tf-error"
+              />
+            </div>
 
-                        <Field as="select" className="form-control" name="taskType" id="taskType">
-                            <option value="">Select Task Type</option>
-                            <option key='type-1' value="Income Tax">Income Tax</option>
-                            <option key='type-2' value="GST">GST</option>
-                            <option key='type-3' value="MCA">MCA</option>
-                            <option key='type-4' value="FEMA">FEMA</option>
-                            <option key='type-5' value="DGFT">DGFT</option>
-                            <option key='type-6' value="Others">Others</option>
-                        </Field>
-                        <ErrorMessage
-                            name="taskType"
-                            component="div"
-                            className="alert alert-danger"
-                        />
-                    </div>
+            <div className="tf-field">
+              <label htmlFor="billingCategory">
+                Billing Category <RequiredMark />
+              </label>
+              <Field name="billingCategory">
+                {({ field, form }) => (
+                  <SearchableSelect
+                    id="billingCategory"
+                    placeholder="Pick a billing category…"
+                    options={[
+                      { value: "Billable", label: "Billable" },
+                      { value: "Non-Billable", label: "Non-Billable" },
+                      { value: "Retainer", label: "Retainer" },
+                    ]}
+                    value={field.value}
+                    onChange={(val) => form.setFieldValue("billingCategory", val)}
+                    className={errors.billingCategory && touched.billingCategory ? "is-invalid" : ""}
+                  />
+                )}
+              </Field>
+              <ErrorMessage
+                name="billingCategory"
+                component="div"
+                className="tf-error"
+              />
+            </div>
+          </div>
 
-                    <div className="form-group">
-                        <label htmlFor="billingCategory">Choose Billing Category<sup className="text-center text-danger">
-                            *</sup>:</label>
+          {/* Row 3: Description (full width) */}
+          <div className="tf-row tf-row-full">
+            <div className="tf-field">
+              <label htmlFor="description">
+                Description <RequiredMark />
+              </label>
+              <Field
+                as="textarea"
+                name="description"
+                id="description"
+                rows="3"
+                placeholder="Briefly describe the work performed…"
+                className={`form-control ${errors.description && touched.description ? "is-invalid" : ""}`}
+              />
+              <ErrorMessage
+                name="description"
+                component="div"
+                className="tf-error"
+              />
+            </div>
+          </div>
 
-                        <Field as="select" className="form-control" name="billingCategory" id="billingCategory">
-                            <option value="">Select Billing Category</option>
-                            <option key='billing-cat-1' value="Billable">Billable</option>
-                            <option key='billing-cat-2' value="Non-Billable">Non-Billable</option>
-                            <option key='billing-cat-3' value="Retainer">Retainer</option>
-                        </Field>
-                        <ErrorMessage
-                            name="billingCategory"
-                            component="div"
-                            className="alert alert-danger"
-                        />
-                    </div>
+          {/* Row 4: Time Spent + Status */}
+          <div className="tf-row">
+            <div className="tf-field">
+              <label htmlFor="minutesSpent">
+                Time Spent (minutes) <RequiredMark />
+              </label>
+              <Field
+                type="number"
+                name="minutesSpent"
+                id="minutesSpent"
+                min="1"
+                placeholder="e.g. 90 (in minutes)"
+                className={`form-control ${errors.minutesSpent && touched.minutesSpent ? "is-invalid" : ""}`}
+              />
+              <ErrorMessage
+                name="minutesSpent"
+                component="div"
+                className="tf-error"
+              />
+            </div>
 
+            <div className="tf-field">
+              <label>
+                Status <RequiredMark />
+              </label>
+              <div className="tf-status-toggle">
+                <button
+                  type="button"
+                  className={`tf-status-btn ${taskStatus ? "" : "active in-progress"}`}
+                  onClick={() => setTaskStatus(false)}
+                >
+                  In-Progress
+                </button>
+                <button
+                  type="button"
+                  className={`tf-status-btn ${taskStatus ? "active completed" : ""}`}
+                  onClick={() => setTaskStatus(true)}
+                >
+                  Completed
+                </button>
+              </div>
+            </div>
+          </div>
 
-                    <div className="form-group">
-                        <label htmlFor="description">Description<sup className="text-center text-danger">
-                            *</sup>:</label>
-                        <Field
-                            type="text"
-                            className="form-control"
-                            id="description"
-                            name="description"
-                        />
-                        <ErrorMessage
-                            name="description"
-                            component="div"
-                            className="alert alert-danger"
-                        />
-                    </div>
-                    <div className="form-group">
-                        <label htmlFor="minutesSpent">Time Spent<sup className="text-center text-danger">
-                            *</sup>:</label>
-                        <Field type="number" className="form-control" id="minutesSpent"
-                            name="minutesSpent" />
+          {/* Reviewer (conditional) */}
+          {taskStatus && (
+            <div className="tf-row tf-row-full tf-slide-in">
+              <div className="tf-field">
+                <label htmlFor="reviewerId">
+                  Approved By <small className="text-muted">(optional)</small>
+                </label>
+                <SearchableSelect
+                  id="reviewerId"
+                  placeholder="Choose an approver…"
+                  options={(reviewers || []).map((r) => ({ value: String(r.id), label: r.username }))}
+                  value={reviewerId || ""}
+                  onChange={(val) => setReviewerId(val || null)}
+                />
+              </div>
+            </div>
+          )}
 
-                        <ErrorMessage
-                            name="minutesSpent"
-                            component="div"
-                            className="alert alert-danger"
-                        />
-                    </div>
-                    <div className="form-group">
-                        <label>Status<sup className="text-center text-danger">
-                            *</sup>:</label>
-                        <button
-                            className="btn btn-md btn-info mr-2"
-                            onClick={(e) => handleStatus(e, !taskStatus)}
-                        >
-                            In-progress {!taskStatus && < input type="checkbox" defaultChecked />}
-                        </button>
-                        <button
-                            className="btn btn-md mr-2 btn-primary"
-                            onClick={(e) => handleStatus(e, !taskStatus)}
-                        >
-                            completed {taskStatus && < input type="checkbox" defaultChecked />}
-                        </button>
-                    </div>
-                    {taskStatus && <div className="form-group">
-                        <label htmlFor="reviewers">Reviewer By: <small className="text-center text-muted">
-                            (optional)</small>: </label>
-
-                        <select className="form-control" onChange={handleInputChange} name="reviewerId" id="reviewers">
-                            <option value={null}>Select Reviewer</option>
-                            {reviewers.map(e =>
-                                <option key={`reviewer-${e.id}`} value={e.id}>{e.username}</option>
-                            )}
-                        </select>
-                    </div>}
-
-
-                    <div className="form-group">
-                        <button type="submit" className="btn btn-primary btn-block">
-                            {loading && !message && (
-                                <span className="spinner-border spinner-border-sm"></span>
-                            )}
-                            <span>Submit</span>
-                        </button>
-                    </div>
-                </div ></Form></Formik>)
-}
+          {/* Submit */}
+          <div className="tf-submit-row">
+            <button
+              type="submit"
+              className="btn btn-primary tf-submit-btn"
+              disabled={loading}
+            >
+              {loading ? (
+                <>
+                  <span className="spinner-border spinner-border-sm mr-2" />{" "}
+                  Saving...
+                </>
+              ) : (
+                "Submit Task"
+              )}
+            </button>
+          </div>
+        </Form>
+      )}
+    </Formik>
+  );
+};

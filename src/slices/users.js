@@ -8,7 +8,7 @@ export const retrieveReviewers = createAsyncThunk(
   async () => {
     const res = await UserService.retrieveReviewers();
     return res.data;
-  }
+  },
 );
 
 export const retrieveAllUsers = createAsyncThunk("users/list", async () => {
@@ -22,7 +22,7 @@ export const findUserByName = createAsyncThunk(
     const res = await UserService.findByName(name);
     console.log("🚀 ~ file: users.js:25 ~ res.data:", res.data);
     return res.data;
-  }
+  },
 );
 
 export const updateUser = createAsyncThunk(
@@ -30,7 +30,23 @@ export const updateUser = createAsyncThunk(
   async ({ id, data }) => {
     const res = await UserService.update(id, data);
     return res.data;
-  }
+  },
+);
+
+export const deactivateUser = createAsyncThunk(
+  "users/deactivate",
+  async ({ id }) => {
+    const res = await UserService.deactivate(id);
+    return res.data;
+  },
+);
+
+export const activateUser = createAsyncThunk(
+  "users/activate",
+  async ({ id }) => {
+    const res = await UserService.activate(id);
+    return res.data;
+  },
 );
 
 const userSlice = createSlice({
@@ -47,11 +63,22 @@ const userSlice = createSlice({
       return [...action.payload];
     },
     [updateUser.fulfilled]: (state, action) => {
-      const index = state.findIndex((Task) => Task.id === action.payload.id);
-      state[index] = {
-        ...state[index],
-        ...action.payload,
-      };
+      const index = state.users.findIndex((u) => u.id === action.payload.id);
+      if (index !== -1) {
+        state.users[index] = { ...state.users[index], ...action.payload };
+      }
+    },
+    [deactivateUser.fulfilled]: (state, action) => {
+      const index = state.users.findIndex((u) => u.id === action.payload.id);
+      if (index !== -1) {
+        state.users[index] = { ...state.users[index], isActive: false };
+      }
+    },
+    [activateUser.fulfilled]: (state, action) => {
+      const index = state.users.findIndex((u) => u.id === action.payload.id);
+      if (index !== -1) {
+        state.users[index] = { ...state.users[index], isActive: true };
+      }
     },
   },
 });

@@ -2,6 +2,7 @@
   "name": "KRMN-UI",
   "version": "0.1.0",
   "private": true,
+  "proxy": "http://localhost:6868",
   "scripts": {
     "build": "export SET NODE_OPTIONS=--openssl-legacy-provider && node scripts/build.js",
     "start": "export SET NODE_OPTIONS=--openssl-legacy-provider && node scripts/start.js",

@@ -5,66 +5,53 @@ import * as Yup from "yup";
 import { clearMessage } from "../../slices/message";
 
 export const ClientForm = (props) => {
-    const initialClientState = {
-        name: "",
-    };
     const [loading, setLoading] = useState(false);
     const { message } = useSelector((state) => state.message);
-
     const dispatch = useDispatch();
+
     useEffect(() => {
         dispatch(clearMessage());
     }, [dispatch]);
 
-    const saveClient = (formValues) => {
-        const { name } = formValues
-        setLoading(true)
-        props.saveClient({ name }).then(() => {
-            setLoading(false);
-        })
-    }
-
     const validationSchema = Yup.object().shape({
-        name: Yup.string().required("This field is required!"),
+        name: Yup.string().required("Client name is required"),
     });
-    return (
 
+    const saveClient = (formValues) => {
+        setLoading(true);
+        props.saveClient({ name: formValues.name }).then(() => setLoading(false));
+    };
+
+    return (
         <Formik
-            initialValues={initialClientState}
+            initialValues={{ name: "" }}
             validationSchema={validationSchema}
             onSubmit={saveClient}
         >
-            <Form>
-                <div>
+            {({ errors, touched }) => (
+                <Form>
                     {message && (
-                        <div className="form-group">
-                            <div className="alert alert-danger" role="alert">
-                                {message}
-                            </div>
-                        </div>
+                        <div className="auth-message error">{message}</div>
                     )}
-                    <div className="form-group">
-                        <label htmlFor="name">Name<sup className="text-center text-danger">
-                            *</sup>:</label>
+                    <div className="auth-field">
+                        <label htmlFor="name">Client Name <span className="text-danger">*</span></label>
                         <Field
                             type="text"
-                            className="form-control"
+                            className={`form-control ${errors.name && touched.name ? "is-invalid" : ""}`}
                             id="name"
                             name="name"
+                            placeholder="Enter client name"
                         />
-                        <ErrorMessage
-                            name="name"
-                            component="div"
-                            className="alert alert-danger"
-                        />
+                        <ErrorMessage name="name" component="div" className="auth-error" />
                     </div>
-                    <div className="form-group">
-                        <button type="submit" className="btn btn-primary btn-block">
-                            {loading && !message && (
-                                <span className="spinner-border spinner-border-sm"></span>
-                            )}
-                            <span>Submit</span>
-                        </button>
-                    </div>
-                </div ></Form></Formik>)
-}
+                    <button type="submit" className="btn-auth-submit" disabled={loading}>
+                        {loading ? (
+                            <span className="spinner-border spinner-border-sm mr-2" />
+                        ) : null}
+                        {loading ? "Saving..." : "Create Client"}
+                    </button>
+                </Form>
+            )}
+        </Formik>
+    );
+};
