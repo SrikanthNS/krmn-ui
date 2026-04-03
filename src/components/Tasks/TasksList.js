@@ -87,6 +87,21 @@ const TasksList = () => {
     return map;
   }, [users]);
 
+  // Status counts from total (unfiltered) tasks
+  const statusCounts = useMemo(() => {
+    if (!allTasks) return { todo: 0, inProgress: 0, completed: 0 };
+    return allTasks.reduce(
+      (acc, t) => {
+        const s = t.status || (t.completed ? "completed" : "in-progress");
+        if (s === "todo") acc.todo++;
+        else if (s === "completed") acc.completed++;
+        else acc.inProgress++;
+        return acc;
+      },
+      { todo: 0, inProgress: 0, completed: 0 },
+    );
+  }, [allTasks]);
+
   // Derived: active filter count
   const activeFilterCount = useMemo(() => {
     let count = 0;
@@ -340,6 +355,30 @@ const TasksList = () => {
       {/* Header */}
       <div className="tasks-header">
         <h4 className="tasks-title">Tasks</h4>
+        <div className="d-flex align-items-center gap-2 mr-auto ml-3">
+          <span className="status-badge todo" style={{ cursor: "default" }}>
+            <span className="status-badge-icon">○</span>
+            <span className="status-badge-label">Todo {statusCounts.todo}</span>
+          </span>
+          <span
+            className="status-badge in-progress"
+            style={{ cursor: "default" }}
+          >
+            <span className="status-badge-icon">●</span>
+            <span className="status-badge-label">
+              In-Progress {statusCounts.inProgress}
+            </span>
+          </span>
+          <span
+            className="status-badge completed"
+            style={{ cursor: "default" }}
+          >
+            <span className="status-badge-icon">✓</span>
+            <span className="status-badge-label">
+              Completed {statusCounts.completed}
+            </span>
+          </span>
+        </div>
         <div className="tasks-actions">
           <button
             className={`btn btn-sm ${showFilters ? "btn-secondary" : "btn-outline-secondary"}`}
