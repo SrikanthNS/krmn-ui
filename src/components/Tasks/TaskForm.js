@@ -42,7 +42,13 @@ export const TaskForm = ({ saveTask }) => {
     minutesSpent: Yup.number()
       .typeError("Must be a number")
       .positive("Must be positive")
-      .required("Time spent is required"),
+      .nullable()
+      .transform((value, original) => (original === "" ? null : value))
+      .when([], {
+        is: () => taskStatus !== "todo",
+        then: (schema) => schema.required("Time spent is required"),
+        otherwise: (schema) => schema.notRequired(),
+      }),
     taskType: Yup.string().required("Task type is required"),
     billingCategory: Yup.string().required("Billing category is required"),
   });
@@ -223,7 +229,7 @@ export const TaskForm = ({ saveTask }) => {
           <div className="tf-row">
             <div className="tf-field">
               <label htmlFor="minutesSpent">
-                Time Spent (minutes) <RequiredMark />
+                Time Spent (minutes) {taskStatus !== "todo" && <RequiredMark />}
               </label>
               <Field
                 type="number"
@@ -233,6 +239,9 @@ export const TaskForm = ({ saveTask }) => {
                 placeholder="e.g. 90 (in minutes)"
                 className={`form-control ${errors.minutesSpent && touched.minutesSpent ? "is-invalid" : ""}`}
               />
+              <small className="text-muted d-block mt-1">
+                Optional for Todo tasks
+              </small>
               <ErrorMessage
                 name="minutesSpent"
                 component="div"
@@ -284,9 +293,9 @@ export const TaskForm = ({ saveTask }) => {
                   options={(users || [])
                     .filter((u) => u.isActive !== false)
                     .map((u) => ({
-                    value: String(u.id),
-                    label: u.username,
-                  }))}
+                      value: String(u.id),
+                      label: u.username,
+                    }))}
                   value={assigneeId}
                   onChange={(val) => setAssigneeId(val || "")}
                 />
