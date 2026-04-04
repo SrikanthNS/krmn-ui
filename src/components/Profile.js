@@ -200,46 +200,50 @@ const Profile = () => {
       </div>
 
       {/* Items Per Page Preference */}
-      <div className="card shadow-sm mt-4">
-        <div className="card-header d-flex justify-content-between align-items-center">
-          <h6 className="mb-0">
-            <span role="img" aria-label="settings">
-              &#9881;&#65039;
-            </span>{" "}
-            Display Preferences
-          </h6>
-          {prefMessage && (
-            <small
-              className={
-                prefMessage === "Saved!" ? "text-success" : "text-danger"
-              }
-            >
-              {prefMessage}
-            </small>
-          )}
-        </div>
-        <div className="card-body">
-          <div className="d-flex align-items-center justify-content-between">
-            <label htmlFor="itemsPerPage" className="mb-0">
-              Items per page
-            </label>
-            <select
-              id="itemsPerPage"
-              className="form-control"
-              style={{ width: 100 }}
-              value={currentUser.itemsPerPage || 20}
-              disabled={savingPreference}
-              onChange={(e) => handleItemsPerPageChange(Number(e.target.value))}
-            >
-              {ALLOWED_PAGE_SIZES.map((size) => (
-                <option key={size} value={size}>
-                  {size}
-                </option>
-              ))}
-            </select>
+      {currentUser.featureFlags?.user_preferences && (
+        <div className="card shadow-sm mt-4">
+          <div className="card-header d-flex justify-content-between align-items-center">
+            <h6 className="mb-0">
+              <span role="img" aria-label="settings">
+                &#9881;&#65039;
+              </span>{" "}
+              Display Preferences
+            </h6>
+            {prefMessage && (
+              <small
+                className={
+                  prefMessage === "Saved!" ? "text-success" : "text-danger"
+                }
+              >
+                {prefMessage}
+              </small>
+            )}
+          </div>
+          <div className="card-body">
+            <div className="d-flex align-items-center justify-content-between">
+              <label htmlFor="itemsPerPage" className="mb-0">
+                Items per page
+              </label>
+              <select
+                id="itemsPerPage"
+                className="form-control"
+                style={{ width: 100 }}
+                value={currentUser.itemsPerPage || 20}
+                disabled={savingPreference}
+                onChange={(e) =>
+                  handleItemsPerPageChange(Number(e.target.value))
+                }
+              >
+                {ALLOWED_PAGE_SIZES.map((size) => (
+                  <option key={size} value={size}>
+                    {size}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

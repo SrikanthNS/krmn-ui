@@ -1,29 +1,32 @@
 import "bootstrap/dist/css/bootstrap.min.css";
-import AddTask from "components/Tasks/AddTask";
-import Task from "components/Tasks/Task";
-import TasksList from "components/Tasks/TasksList";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { lazy, Suspense, useCallback, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { BrowserRouter as Router, Link, Route, Switch } from "react-router-dom";
 import "./App.css";
 import EventBus from "./common/EventBus";
-import BoardAdmin from "./components/BoardAdmin";
-import BoardModerator from "./components/BoardModerator";
-import Home from "./components/Home";
 import Loader from "./components/Loader";
 import Login from "./components/Login";
-import Profile from "./components/Profile";
-import Register from "./components/Register";
 import { history } from "./helpers/history";
 import { logout } from "./slices/auth";
 import { clearMessage } from "./slices/message";
 import AuthVerify from "./common/AuthVerify";
-import ClientList from "components/clients/ClientList";
-import AddClient from "components/clients/AddClient";
-import Client from "components/clients/Client";
-import User from "components/users/User";
-import StaffList from "components/users/StaffList";
 import { capitalize } from "lodash";
+
+// Lazy-loaded route components
+const Home = lazy(() => import("./components/Home"));
+const Profile = lazy(() => import("./components/Profile"));
+const Register = lazy(() => import("./components/Register"));
+const TasksList = lazy(() => import("components/Tasks/TasksList"));
+const AddTask = lazy(() => import("components/Tasks/AddTask"));
+const Task = lazy(() => import("components/Tasks/Task"));
+const BoardModerator = lazy(() => import("./components/BoardModerator"));
+const BoardAdmin = lazy(() => import("./components/BoardAdmin"));
+const ClientList = lazy(() => import("components/clients/ClientList"));
+const AddClient = lazy(() => import("components/clients/AddClient"));
+const Client = lazy(() => import("components/clients/Client"));
+const StaffList = lazy(() => import("components/users/StaffList"));
+const User = lazy(() => import("components/users/User"));
+const FeatureFlags = lazy(() => import("components/admin/FeatureFlags"));
 
 const App = () => {
   const [showAdminBoard, setShowAdminBoard] = useState(false);
@@ -76,15 +79,26 @@ const App = () => {
               <span className="toggler-bar"></span>
             </button>
 
-            <div className={`navbar-collapse${navOpen ? " show" : " collapse"}`} id="mainNav">
+            <div
+              className={`navbar-collapse${navOpen ? " show" : " collapse"}`}
+              id="mainNav"
+            >
               {currentUser && (
                 <ul className="nav-links">
                   <li className="nav-section">
                     <span className="nav-section-label">Tasks</span>
-                    <Link to="/taskList" className="nav-menu-item" onClick={closeNav}>
+                    <Link
+                      to="/taskList"
+                      className="nav-menu-item"
+                      onClick={closeNav}
+                    >
                       <span className="nav-icon">&#128203;</span> Task List
                     </Link>
-                    <Link to="/addTask" className="nav-menu-item" onClick={closeNav}>
+                    <Link
+                      to="/addTask"
+                      className="nav-menu-item"
+                      onClick={closeNav}
+                    >
                       <span className="nav-icon">&#10133;</span> Add Task
                     </Link>
                   </li>
@@ -93,20 +107,48 @@ const App = () => {
                     <>
                       <li className="nav-section">
                         <span className="nav-section-label">Clients</span>
-                        <Link to="/clientList" className="nav-menu-item" onClick={closeNav}>
-                          <span className="nav-icon">&#128101;</span> Client List
+                        <Link
+                          to="/clientList"
+                          className="nav-menu-item"
+                          onClick={closeNav}
+                        >
+                          <span className="nav-icon">&#128101;</span> Client
+                          List
                         </Link>
-                        <Link to="/addClient" className="nav-menu-item" onClick={closeNav}>
+                        <Link
+                          to="/addClient"
+                          className="nav-menu-item"
+                          onClick={closeNav}
+                        >
                           <span className="nav-icon">&#10133;</span> Add Client
                         </Link>
                       </li>
                       <li className="nav-section">
                         <span className="nav-section-label">Staff</span>
-                        <Link to="/staffList" className="nav-menu-item" onClick={closeNav}>
+                        <Link
+                          to="/staffList"
+                          className="nav-menu-item"
+                          onClick={closeNav}
+                        >
                           <span className="nav-icon">&#128100;</span> Staff List
                         </Link>
-                        <Link to="/register" className="nav-menu-item" onClick={closeNav}>
+                        <Link
+                          to="/register"
+                          className="nav-menu-item"
+                          onClick={closeNav}
+                        >
                           <span className="nav-icon">&#10133;</span> Add Staff
+                        </Link>
+                      </li>
+                      <li className="nav-section">
+                        <span className="nav-section-label">Admin</span>
+                        <Link
+                          to="/feature-flags"
+                          className="nav-menu-item"
+                          onClick={closeNav}
+                        >
+                          <span className="nav-icon">&#9873;</span> Feature
+                          Flags
                         </Link>
                       </li>
                     </>
@@ -125,16 +167,33 @@ const App = () => {
                         {capitalize(currentUser.username)}
                       </span>
                       <div className="nav-user-actions">
-                        <Link to="/profile" className="nav-user-link" onClick={closeNav}>Profile</Link>
+                        <Link
+                          to="/profile"
+                          className="nav-user-link"
+                          onClick={closeNav}
+                        >
+                          Profile
+                        </Link>
                         <span className="nav-user-divider">|</span>
-                        <a href="/login" className="nav-user-link" onClick={() => { closeNav(); logOut(); }}>
+                        <Link
+                          to="/login"
+                          className="nav-user-link"
+                          onClick={() => {
+                            closeNav();
+                            logOut();
+                          }}
+                        >
                           Logout
-                        </a>
+                        </Link>
                       </div>
                     </div>
                   </div>
                 ) : (
-                  <Link to="/login" className="btn-nav-login" onClick={closeNav}>
+                  <Link
+                    to="/login"
+                    className="btn-nav-login"
+                    onClick={closeNav}
+                  >
                     Sign In
                   </Link>
                 )}
@@ -145,22 +204,31 @@ const App = () => {
 
         {/* ── Main Content ── */}
         <main className="app-main">
-          <Switch>
-            <Route exact path={["/", "/home"]} component={Home} />
-            <Route exact path="/login" component={Login} />
-            <Route exact path="/register" component={Register} />
-            <Route exact path="/profile" component={Profile} />
-            <Route path="/taskList" component={TasksList} />
-            <Route path="/addTask" component={AddTask} />
-            <Route path="/mod" component={BoardModerator} />
-            <Route path="/admin" component={BoardAdmin} />
-            <Route path="/tasks/:id" component={Task} />
-            <Route path="/clientList" component={ClientList} />
-            <Route path="/addClient" component={AddClient} />
-            <Route path="/clients/:id" component={Client} />
-            <Route path="/staffList" component={StaffList} />
-            <Route path="/users/:id" component={User} />
-          </Switch>
+          <Suspense
+            fallback={
+              <div className="text-center mt-5">
+                <span className="spinner-border" />
+              </div>
+            }
+          >
+            <Switch>
+              <Route exact path={["/", "/home"]} component={Home} />
+              <Route exact path="/login" component={Login} />
+              <Route exact path="/register" component={Register} />
+              <Route exact path="/profile" component={Profile} />
+              <Route path="/taskList" component={TasksList} />
+              <Route path="/addTask" component={AddTask} />
+              <Route path="/mod" component={BoardModerator} />
+              <Route path="/admin" component={BoardAdmin} />
+              <Route path="/tasks/:id" component={Task} />
+              <Route path="/clientList" component={ClientList} />
+              <Route path="/addClient" component={AddClient} />
+              <Route path="/clients/:id" component={Client} />
+              <Route path="/staffList" component={StaffList} />
+              <Route path="/users/:id" component={User} />
+              <Route path="/feature-flags" component={FeatureFlags} />
+            </Switch>
+          </Suspense>
         </main>
 
         <AuthVerify logOut={logOut} />

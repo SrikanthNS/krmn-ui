@@ -21,7 +21,7 @@ const User = (props) => {
         const roleNames = (response.data.roles || []).map((r) => r.name);
         setSelectedRoles(roleNames);
       })
-      .catch((e) => console.log(e));
+      .catch(() => {});
   }, [props.match.params.id]);
 
   const handleInputChange = (event) => {

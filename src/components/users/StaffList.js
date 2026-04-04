@@ -16,9 +16,14 @@ const StaffList = () => {
   const [searchName, setSearchName] = useState("");
   const { users } = useSelector((state) => state.user);
   const { user: currentUser } = useSelector((state) => state.auth);
-  const userItemsPerPage = currentUser?.itemsPerPage || DEFAULT_ITEMS_PER_PAGE;
+  const prefEnabled = currentUser?.featureFlags?.user_preferences;
+  const userItemsPerPage = prefEnabled
+    ? currentUser?.itemsPerPage || DEFAULT_ITEMS_PER_PAGE
+    : DEFAULT_ITEMS_PER_PAGE;
   const [sessionPageSize, setSessionPageSize] = useState(null);
-  const itemsPerPage = sessionPageSize || userItemsPerPage;
+  const itemsPerPage = prefEnabled
+    ? sessionPageSize || userItemsPerPage
+    : DEFAULT_ITEMS_PER_PAGE;
   const dispatch = useDispatch();
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -40,7 +45,7 @@ const StaffList = () => {
       return;
     dispatch(deactivateUser({ id }))
       .unwrap()
-      .catch((e) => console.log(e));
+      .catch(() => {});
   };
 
   const handleActivate = (id) => {
@@ -48,7 +53,7 @@ const StaffList = () => {
       return;
     dispatch(activateUser({ id }))
       .unwrap()
-      .catch((e) => console.log(e));
+      .catch(() => {});
   };
 
   return (
@@ -94,24 +99,26 @@ const StaffList = () => {
             onPageChange={setCurrentPage}
             itemsPerPage={itemsPerPage}
           />
-          <span
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 4,
-              fontSize: "0.85rem",
-            }}
-          >
-            Show{" "}
-            <PageSizeSelect
-              value={itemsPerPage}
-              onChange={(v) => {
-                setSessionPageSize(v);
-                setCurrentPage(1);
+          {prefEnabled && (
+            <span
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 4,
+                fontSize: "0.85rem",
               }}
-            />{" "}
-            / page
-          </span>
+            >
+              Show{" "}
+              <PageSizeSelect
+                value={itemsPerPage}
+                onChange={(v) => {
+                  setSessionPageSize(v);
+                  setCurrentPage(1);
+                }}
+              />{" "}
+              / page
+            </span>
+          )}
         </div>
       )}
 
@@ -209,24 +216,26 @@ const StaffList = () => {
             onPageChange={setCurrentPage}
             itemsPerPage={itemsPerPage}
           />
-          <span
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 4,
-              fontSize: "0.85rem",
-            }}
-          >
-            Show{" "}
-            <PageSizeSelect
-              value={itemsPerPage}
-              onChange={(v) => {
-                setSessionPageSize(v);
-                setCurrentPage(1);
+          {prefEnabled && (
+            <span
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 4,
+                fontSize: "0.85rem",
               }}
-            />{" "}
-            / page
-          </span>
+            >
+              Show{" "}
+              <PageSizeSelect
+                value={itemsPerPage}
+                onChange={(v) => {
+                  setSessionPageSize(v);
+                  setCurrentPage(1);
+                }}
+              />{" "}
+              / page
+            </span>
+          )}
         </div>
       )}
     </div>

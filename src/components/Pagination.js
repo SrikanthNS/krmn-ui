@@ -3,7 +3,7 @@ import React from "react";
 const DEFAULT_ITEMS_PER_PAGE = 20;
 const ALLOWED_PAGE_SIZES = [10, 20, 50, 100];
 
-const PageSizeSelect = ({ value, onChange }) => (
+const PageSizeSelect = React.memo(({ value, onChange }) => (
   <select
     className="form-control form-control-sm"
     style={{ width: 70, display: "inline-block" }}
@@ -16,7 +16,7 @@ const PageSizeSelect = ({ value, onChange }) => (
       </option>
     ))}
   </select>
-);
+));
 
 const Pagination = ({
   currentPage,
@@ -102,4 +102,4 @@ const Pagination = ({
 };
 
 export { DEFAULT_ITEMS_PER_PAGE, ALLOWED_PAGE_SIZES, PageSizeSelect };
-export default Pagination;
+export default React.memo(Pagination);

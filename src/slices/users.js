@@ -20,7 +20,6 @@ export const findUserByName = createAsyncThunk(
   "users/findByName",
   async ({ name }) => {
     const res = await UserService.findByName(name);
-    console.log("🚀 ~ file: users.js:25 ~ res.data:", res.data);
     return res.data;
   },
 );

@@ -19,7 +19,7 @@ import MultiSelectDropdown from "../MultiSelectDropdown";
 const truncate = (text, max = 80) =>
   text && text.length > max ? text.slice(0, max) + "…" : text;
 
-const StatusBadge = ({ task }) => {
+const StatusBadge = React.memo(({ task }) => {
   const status = task.status || (task.completed ? "completed" : "in-progress");
   const map = {
     todo: { cls: "status-badge todo", label: "Todo", icon: "○" },
@@ -37,7 +37,7 @@ const StatusBadge = ({ task }) => {
       <span className="status-badge-label">{s.label}</span>
     </span>
   );
-};
+});
 
 const TasksList = () => {
   const allTasks = useSelector((state) => state.tasks);
@@ -45,9 +45,14 @@ const TasksList = () => {
   const { reviewers, users } = useSelector((state) => state.user);
   const dispatch = useDispatch();
   const { user: currentUser } = useSelector((state) => state.auth);
-  const userItemsPerPage = currentUser?.itemsPerPage || DEFAULT_ITEMS_PER_PAGE;
+  const prefEnabled = currentUser?.featureFlags?.user_preferences;
+  const userItemsPerPage = prefEnabled
+    ? currentUser?.itemsPerPage || DEFAULT_ITEMS_PER_PAGE
+    : DEFAULT_ITEMS_PER_PAGE;
   const [sessionPageSize, setSessionPageSize] = useState(null);
-  const itemsPerPage = sessionPageSize || userItemsPerPage;
+  const itemsPerPage = prefEnabled
+    ? sessionPageSize || userItemsPerPage
+    : DEFAULT_ITEMS_PER_PAGE;
   const [showUserCol, setShowUserCol] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
@@ -289,12 +294,12 @@ const TasksList = () => {
     if (!window.confirm("Are you sure you want to delete this task?")) return;
     dispatch(deleteTask({ id }))
       .unwrap()
-      .catch((e) => console.log(e));
+      .catch(() => {});
   };
 
   const removeAllTasks = () => {
     if (!window.confirm("Are you sure you want to delete all tasks?")) return;
-    dispatch(deleteAllTasks()).catch((e) => console.log(e));
+    dispatch(deleteAllTasks()).catch(() => {});
   };
 
   const download = () => {
@@ -594,24 +599,26 @@ const TasksList = () => {
             onPageChange={setCurrentPage}
             itemsPerPage={itemsPerPage}
           />
-          <span
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 4,
-              fontSize: "0.85rem",
-            }}
-          >
-            Show{" "}
-            <PageSizeSelect
-              value={itemsPerPage}
-              onChange={(v) => {
-                setSessionPageSize(v);
-                setCurrentPage(1);
+          {prefEnabled && (
+            <span
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 4,
+                fontSize: "0.85rem",
               }}
-            />{" "}
-            / page
-          </span>
+            >
+              Show{" "}
+              <PageSizeSelect
+                value={itemsPerPage}
+                onChange={(v) => {
+                  setSessionPageSize(v);
+                  setCurrentPage(1);
+                }}
+              />{" "}
+              / page
+            </span>
+          )}
         </div>
       )}
 
@@ -853,24 +860,26 @@ const TasksList = () => {
             onPageChange={setCurrentPage}
             itemsPerPage={itemsPerPage}
           />
-          <span
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 4,
-              fontSize: "0.85rem",
-            }}
-          >
-            Show{" "}
-            <PageSizeSelect
-              value={itemsPerPage}
-              onChange={(v) => {
-                setSessionPageSize(v);
-                setCurrentPage(1);
+          {prefEnabled && (
+            <span
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 4,
+                fontSize: "0.85rem",
               }}
-            />{" "}
-            / page
-          </span>
+            >
+              Show{" "}
+              <PageSizeSelect
+                value={itemsPerPage}
+                onChange={(v) => {
+                  setSessionPageSize(v);
+                  setCurrentPage(1);
+                }}
+              />{" "}
+              / page
+            </span>
+          )}
         </div>
       )}
     </div>

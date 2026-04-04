@@ -5,6 +5,7 @@ import tasksReducer from "./slices/tasks";
 import userReducer from "./slices/users";
 import clientReducer from "./slices/clients";
 import loadingReducer from "./slices/loading";
+import featureFlagsReducer from "./slices/featureFlags";
 
 const reducer = {
   auth: authReducer,
@@ -13,11 +14,12 @@ const reducer = {
   user: userReducer,
   client: clientReducer,
   loading: loadingReducer,
+  featureFlags: featureFlagsReducer,
 };
 
 const store = configureStore({
   reducer: reducer,
-  devTools: true,
+  devTools: process.env.NODE_ENV === "development",
 });
 
 export default store;

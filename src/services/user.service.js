@@ -42,7 +42,6 @@ const activate = (id) => {
 };
 
 const get = (id) => {
-  console.log("🚀 ~ file: user.service.js:37 ~ get ~ id:", id);
   return http.get(`/users/${id}`, { headers: authHeader() });
 };
 

@@ -64,14 +64,6 @@ export const TaskForm = ({ saveTask }) => {
       reviewerId: isCompleted ? reviewerId : null,
       ...(isAdminOrMod && assigneeId ? { userId: assigneeId } : {}),
     };
-    console.log(
-      "[TaskForm] DEBUG: isAdminOrMod =",
-      isAdminOrMod,
-      "| assigneeId =",
-      assigneeId,
-      "| payload.userId =",
-      payload.userId,
-    );
     saveTask(payload)
       .catch((e) => console.error(e))
       .finally(() => setLoading(false));

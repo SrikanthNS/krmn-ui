@@ -12,7 +12,7 @@ const Client = (props) => {
   useEffect(() => {
     ClientService.get(props.match.params.id)
       .then((response) => setCurrentClient(response.data))
-      .catch((e) => console.log(e));
+      .catch(() => {});
   }, [props.match.params.id]);
 
   const handleInputChange = (event) => {
@@ -42,7 +42,12 @@ const Client = (props) => {
         </div>
         <div className="auth-card-body">
           {currentClient && (
-            <form onSubmit={(e) => { e.preventDefault(); updateContent(); }}>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                updateContent();
+              }}
+            >
               <div className="auth-field">
                 <label htmlFor="name">Client Name</label>
                 <input
@@ -55,7 +60,9 @@ const Client = (props) => {
                 />
               </div>
               <div className="d-flex gap-2 mt-3">
-                <button type="submit" className="btn btn-primary flex-fill">Update</button>
+                <button type="submit" className="btn btn-primary flex-fill">
+                  Update
+                </button>
                 <button
                   type="button"
                   className="btn btn-outline-secondary flex-fill"
@@ -65,7 +72,10 @@ const Client = (props) => {
                 </button>
               </div>
               {message && (
-                <div className={"auth-message " + (isError ? "error" : "success")} style={{ marginTop: 12 }}>
+                <div
+                  className={"auth-message " + (isError ? "error" : "success")}
+                  style={{ marginTop: 12 }}
+                >
                   {message}
                 </div>
               )}
