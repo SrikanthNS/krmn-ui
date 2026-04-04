@@ -1,15 +1,92 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Redirect } from "react-router-dom";
 import authService from "../services/auth.service";
 import UserService from "../services/user.service";
-import { updateItemsPerPage } from "../slices/auth";
+import { updateItemsPerPage, updateDarkModeSettings } from "../slices/auth";
 
 const ALLOWED_PAGE_SIZES = [10, 20, 50, 100];
+
+// Dark mode schedule modes (similar to macOS)
+const DARK_MODE_OPTIONS = {
+  OFF: "off",
+  ON: "on",
+  SUNSET_SUNRISE: "sunset_sunrise",
+  CUSTOM: "custom",
+};
+
+/**
+ * Approximate sunrise/sunset using day-of-year.
+ * Returns { sunrise, sunset } in 24 h decimal (e.g. 6.5 = 06:30).
+ * Good-enough for a UI toggle — no geolocation needed.
+ */
+const getSunTimes = () => {
+  const now = new Date();
+  const start = new Date(now.getFullYear(), 0, 0);
+  const dayOfYear = Math.floor((now - start) / 86400000);
+  // Simple sinusoidal model: sunrise ~5:30–7:00, sunset ~17:30–20:30
+  const sunriseHour =
+    6.25 - 0.75 * Math.cos((2 * Math.PI * (dayOfYear - 172)) / 365);
+  const sunsetHour =
+    19.0 + 1.5 * Math.cos((2 * Math.PI * (dayOfYear - 172)) / 365);
+  return { sunrise: sunriseHour, sunset: sunsetHour };
+};
+
+const decimalToTime = (decimal) => {
+  const h = Math.floor(decimal);
+  const m = Math.round((decimal - h) * 60);
+  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+};
+
+const timeToDecimal = (timeStr) => {
+  const [h, m] = timeStr.split(":").map(Number);
+  return h + m / 60;
+};
+
+const shouldBeDark = (settings) => {
+  if (!settings) return false;
+  const { mode, customFrom, customTo } = settings;
+  if (mode === DARK_MODE_OPTIONS.ON) return true;
+  if (mode === DARK_MODE_OPTIONS.OFF) return false;
+
+  const now = new Date();
+  const currentHour = now.getHours() + now.getMinutes() / 60;
+
+  if (mode === DARK_MODE_OPTIONS.SUNSET_SUNRISE) {
+    const { sunrise, sunset } = getSunTimes();
+    return currentHour >= sunset || currentHour < sunrise;
+  }
+
+  if (mode === DARK_MODE_OPTIONS.CUSTOM) {
+    const from = timeToDecimal(customFrom || "20:00");
+    const to = timeToDecimal(customTo || "06:00");
+    if (from > to) {
+      // Overnight: e.g. 20:00 → 06:00
+      return currentHour >= from || currentHour < to;
+    }
+    return currentHour >= from && currentHour < to;
+  }
+  return false;
+};
 
 const Profile = () => {
   const { user: currentUser } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
+
+  const DEFAULT_DARK_SETTINGS = {
+    mode: "off",
+    customFrom: "20:00",
+    customTo: "06:00",
+  };
+
+  // Load dark-mode settings from user profile (DB-backed)
+  const [darkSettings, setDarkSettings] = useState(
+    () => currentUser?.darkModeSettings || DEFAULT_DARK_SETTINGS,
+  );
+
+  const [theme, setTheme] = useState(() =>
+    shouldBeDark(darkSettings) ? "dark" : "light",
+  );
 
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -23,6 +100,43 @@ const Profile = () => {
   const [showConfirmPw, setShowConfirmPw] = useState(false);
   const [savingPreference, setSavingPreference] = useState(false);
   const [prefMessage, setPrefMessage] = useState("");
+
+  const applyTheme = useCallback((isDark) => {
+    const next = isDark ? "dark" : "light";
+    setTheme(next);
+    localStorage.setItem("theme", next);
+    document.documentElement.setAttribute("data-theme", next);
+  }, []);
+
+  const updateDarkSettings = (updates) => {
+    const next = { ...darkSettings, ...updates };
+    setDarkSettings(next);
+    applyTheme(shouldBeDark(next));
+    // Persist to DB (same endpoint as itemsPerPage)
+    UserService.updatePreferences({ darkModeSettings: next })
+      .then(() => {
+        dispatch(updateDarkModeSettings(next));
+      })
+      .catch((err) => {
+        console.error(
+          "Failed to save dark mode settings:",
+          err.response?.data || err.message,
+        );
+      });
+  };
+
+  // Re-evaluate schedule every 60 s for sunset/sunrise & custom modes
+  useEffect(() => {
+    if (
+      darkSettings.mode === DARK_MODE_OPTIONS.SUNSET_SUNRISE ||
+      darkSettings.mode === DARK_MODE_OPTIONS.CUSTOM
+    ) {
+      const interval = setInterval(() => {
+        applyTheme(shouldBeDark(darkSettings));
+      }, 60000);
+      return () => clearInterval(interval);
+    }
+  }, [darkSettings, applyTheme]);
 
   if (!currentUser) {
     return <Redirect to="/login" />;
@@ -319,15 +433,16 @@ const Profile = () => {
         )}
       </div>
 
-      {/* Items Per Page Preference */}
-      {currentUser.featureFlags?.user_preferences && (
+      {/* Preferences */}
+      {(currentUser.featureFlags?.user_preferences ||
+        currentUser.featureFlags?.dark_mode) && (
         <div className="card shadow-sm mt-4">
           <div className="card-header d-flex justify-content-between align-items-center">
             <h6 className="mb-0">
               <span role="img" aria-label="settings">
                 &#9881;&#65039;
               </span>{" "}
-              Display Preferences
+              Preferences
             </h6>
             {prefMessage && (
               <small
@@ -340,27 +455,161 @@ const Profile = () => {
             )}
           </div>
           <div className="card-body">
-            <div className="d-flex align-items-center justify-content-between">
-              <label htmlFor="itemsPerPage" className="mb-0">
-                Items per page
-              </label>
-              <select
-                id="itemsPerPage"
-                className="form-control"
-                style={{ width: 100 }}
-                value={currentUser.itemsPerPage || 20}
-                disabled={savingPreference}
-                onChange={(e) =>
-                  handleItemsPerPageChange(Number(e.target.value))
-                }
+            {currentUser.featureFlags?.user_preferences && (
+              <div className="d-flex align-items-center justify-content-between">
+                <label htmlFor="itemsPerPage" className="mb-0">
+                  Items per page
+                </label>
+                <select
+                  id="itemsPerPage"
+                  className="form-control"
+                  style={{ width: 100 }}
+                  value={currentUser.itemsPerPage || 20}
+                  disabled={savingPreference}
+                  onChange={(e) =>
+                    handleItemsPerPageChange(Number(e.target.value))
+                  }
+                >
+                  {ALLOWED_PAGE_SIZES.map((size) => (
+                    <option key={size} value={size}>
+                      {size}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+            {currentUser.featureFlags?.dark_mode && (
+              <div
+                className={`dark-mode-settings${
+                  currentUser.featureFlags?.user_preferences
+                    ? " mt-3 pt-3 border-top"
+                    : ""
+                }`}
               >
-                {ALLOWED_PAGE_SIZES.map((size) => (
-                  <option key={size} value={size}>
-                    {size}
-                  </option>
-                ))}
-              </select>
-            </div>
+                <div className="d-flex align-items-center justify-content-between mb-3">
+                  <span>
+                    {theme === "dark" ? "\u{1F319}" : "\u{2600}\u{FE0F}"}{" "}
+                    Appearance
+                  </span>
+                  <span
+                    className={`badge badge-${theme === "dark" ? "dark" : "light"} border`}
+                  >
+                    {theme === "dark" ? "Dark" : "Light"}
+                  </span>
+                </div>
+
+                <div className="dark-mode-options">
+                  <label className="dark-mode-option">
+                    <input
+                      type="radio"
+                      name="darkMode"
+                      checked={darkSettings.mode === DARK_MODE_OPTIONS.OFF}
+                      onChange={() =>
+                        updateDarkSettings({ mode: DARK_MODE_OPTIONS.OFF })
+                      }
+                    />
+                    <div className="option-content">
+                      <span className="option-label">Off</span>
+                      <span className="option-desc">Always use light mode</span>
+                    </div>
+                  </label>
+
+                  <label className="dark-mode-option">
+                    <input
+                      type="radio"
+                      name="darkMode"
+                      checked={darkSettings.mode === DARK_MODE_OPTIONS.ON}
+                      onChange={() =>
+                        updateDarkSettings({ mode: DARK_MODE_OPTIONS.ON })
+                      }
+                    />
+                    <div className="option-content">
+                      <span className="option-label">On</span>
+                      <span className="option-desc">Always use dark mode</span>
+                    </div>
+                  </label>
+
+                  <label className="dark-mode-option">
+                    <input
+                      type="radio"
+                      name="darkMode"
+                      checked={
+                        darkSettings.mode === DARK_MODE_OPTIONS.SUNSET_SUNRISE
+                      }
+                      onChange={() =>
+                        updateDarkSettings({
+                          mode: DARK_MODE_OPTIONS.SUNSET_SUNRISE,
+                        })
+                      }
+                    />
+                    <div className="option-content">
+                      <span className="option-label">Sunset to Sunrise</span>
+                      <span className="option-desc">
+                        Dark from ~{decimalToTime(getSunTimes().sunset)} to ~
+                        {decimalToTime(getSunTimes().sunrise)}
+                      </span>
+                    </div>
+                  </label>
+
+                  <label className="dark-mode-option">
+                    <input
+                      type="radio"
+                      name="darkMode"
+                      checked={darkSettings.mode === DARK_MODE_OPTIONS.CUSTOM}
+                      onChange={() =>
+                        updateDarkSettings({ mode: DARK_MODE_OPTIONS.CUSTOM })
+                      }
+                    />
+                    <div className="option-content">
+                      <span className="option-label">Custom Schedule</span>
+                      <span className="option-desc">Set your own times</span>
+                    </div>
+                  </label>
+                </div>
+
+                {darkSettings.mode === DARK_MODE_OPTIONS.CUSTOM && (
+                  <div className="custom-schedule mt-3">
+                    <div className="d-flex align-items-center gap-2">
+                      <div className="flex-fill">
+                        <label
+                          htmlFor="darkFrom"
+                          className="small text-muted mb-1 d-block"
+                        >
+                          Dark mode from
+                        </label>
+                        <input
+                          id="darkFrom"
+                          type="time"
+                          className="form-control form-control-sm"
+                          value={darkSettings.customFrom}
+                          onChange={(e) =>
+                            updateDarkSettings({ customFrom: e.target.value })
+                          }
+                        />
+                      </div>
+                      <span className="mt-3 px-2">→</span>
+                      <div className="flex-fill">
+                        <label
+                          htmlFor="darkTo"
+                          className="small text-muted mb-1 d-block"
+                        >
+                          Light mode from
+                        </label>
+                        <input
+                          id="darkTo"
+                          type="time"
+                          className="form-control form-control-sm"
+                          value={darkSettings.customTo}
+                          onChange={(e) =>
+                            updateDarkSettings({ customTo: e.target.value })
+                          }
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       )}

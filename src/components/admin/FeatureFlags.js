@@ -9,6 +9,7 @@ import {
 const FLAG_DESCRIPTIONS = {
   user_preferences:
     "Allow users to customize display preferences (items per page)",
+  dark_mode: "Allow users to switch between light and dark themes",
 };
 
 const FeatureFlags = () => {

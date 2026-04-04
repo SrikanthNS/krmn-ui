@@ -71,6 +71,16 @@ const authSlice = createSlice({
         }
       }
     },
+    updateDarkModeSettings: (state, action) => {
+      if (state.user) {
+        state.user.darkModeSettings = action.payload;
+        const stored = JSON.parse(localStorage.getItem("user"));
+        if (stored) {
+          stored.darkModeSettings = action.payload;
+          localStorage.setItem("user", JSON.stringify(stored));
+        }
+      }
+    },
   },
   extraReducers: {
     [register.fulfilled]: (state, action) => {
@@ -95,5 +105,5 @@ const authSlice = createSlice({
 });
 
 const { reducer, actions } = authSlice;
-export const { updateItemsPerPage } = actions;
+export const { updateItemsPerPage, updateDarkModeSettings } = actions;
 export default reducer;

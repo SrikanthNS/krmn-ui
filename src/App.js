@@ -59,6 +59,64 @@ const App = () => {
     return () => EventBus.remove("logout");
   }, [currentUser, logOut]);
 
+  // Apply saved theme on mount (only if dark_mode flag is enabled)
+  useEffect(() => {
+    if (!currentUser?.featureFlags?.dark_mode) {
+      document.documentElement.setAttribute("data-theme", "light");
+      return;
+    }
+
+    const DEFAULT_SETTINGS = {
+      mode: "off",
+      customFrom: "20:00",
+      customTo: "06:00",
+    };
+    const settings = currentUser.darkModeSettings || DEFAULT_SETTINGS;
+
+    const evaluateTheme = (s) => {
+      const { mode, customFrom, customTo } = s;
+      if (mode === "on") return true;
+      if (mode === "off") return false;
+      const now = new Date();
+      const currentHour = now.getHours() + now.getMinutes() / 60;
+      if (mode === "sunset_sunrise") {
+        const start = new Date(now.getFullYear(), 0, 0);
+        const dayOfYear = Math.floor((now - start) / 86400000);
+        const sunrise =
+          6.25 - 0.75 * Math.cos((2 * Math.PI * (dayOfYear - 172)) / 365);
+        const sunset =
+          19.0 + 1.5 * Math.cos((2 * Math.PI * (dayOfYear - 172)) / 365);
+        return currentHour >= sunset || currentHour < sunrise;
+      }
+      if (mode === "custom") {
+        const [fh, fm] = (customFrom || "20:00").split(":").map(Number);
+        const [th, tm] = (customTo || "06:00").split(":").map(Number);
+        const from = fh + fm / 60;
+        const to = th + tm / 60;
+        return from > to
+          ? currentHour >= from || currentHour < to
+          : currentHour >= from && currentHour < to;
+      }
+      return false;
+    };
+
+    document.documentElement.setAttribute(
+      "data-theme",
+      evaluateTheme(settings) ? "dark" : "light",
+    );
+
+    // Re-evaluate every 60 s for scheduled modes
+    if (settings.mode === "sunset_sunrise" || settings.mode === "custom") {
+      const interval = setInterval(() => {
+        document.documentElement.setAttribute(
+          "data-theme",
+          evaluateTheme(settings) ? "dark" : "light",
+        );
+      }, 60000);
+      return () => clearInterval(interval);
+    }
+  }, [currentUser]);
+
   return (
     <Router history={history}>
       <Loader />
