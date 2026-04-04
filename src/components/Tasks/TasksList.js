@@ -3,12 +3,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { retrieveClients } from "../../slices/clients";
-import {
-  deleteAllTasks,
-  deleteTask,
-  retrieveTasks,
-  downloadTasks,
-} from "../../slices/tasks";
+import { deleteTask, retrieveTasks, downloadTasks } from "../../slices/tasks";
 import { retrieveReviewers, retrieveAllUsers } from "../../slices/users";
 import Pagination, {
   DEFAULT_ITEMS_PER_PAGE,
@@ -297,11 +292,6 @@ const TasksList = () => {
       .catch(() => {});
   };
 
-  const removeAllTasks = () => {
-    if (!window.confirm("Are you sure you want to delete all tasks?")) return;
-    dispatch(deleteAllTasks()).catch(() => {});
-  };
-
   const download = () => {
     const dataToExport = sortedTasks.length > 0 ? sortedTasks : tasks;
     if (!dataToExport || dataToExport.length === 0) return;
@@ -408,14 +398,6 @@ const TasksList = () => {
           >
             &#128229; Export
           </button>
-          {allTasks && allTasks.length > 0 && (
-            <button
-              className="btn btn-sm btn-outline-danger"
-              onClick={removeAllTasks}
-            >
-              Remove All
-            </button>
-          )}
         </div>
       </div>
 

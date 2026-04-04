@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import {
-  deleteAllClients,
   deleteClient,
   findClientByName,
   retrieveClients,
@@ -42,11 +41,6 @@ const ClientList = () => {
       .catch(() => {});
   };
 
-  const removeAllClients = () => {
-    if (!window.confirm("Are you sure you want to delete all clients?")) return;
-    dispatch(deleteAllClients()).catch(() => {});
-  };
-
   const findByName = () => {
     setCurrentPage(1);
     dispatch(findClientByName({ name: searchName }));
@@ -57,14 +51,6 @@ const ClientList = () => {
       <div className="page-header">
         <h4 className="page-title">&#128101; Clients</h4>
         <div className="page-header-actions">
-          {clients.length > 0 && (
-            <button
-              className="btn btn-sm btn-outline-danger"
-              onClick={removeAllClients}
-            >
-              Remove All
-            </button>
-          )}
           <Link to="/addClient" className="btn btn-sm btn-primary">
             + Add Client
           </Link>
