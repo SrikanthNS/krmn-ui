@@ -8,6 +8,7 @@ import { clearMessage } from "../slices/message";
 
 const Login = (props) => {
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const { isLoggedIn } = useSelector((state) => state.auth);
   const { message } = useSelector((state) => state.message);
   const dispatch = useDispatch();
@@ -68,12 +69,51 @@ const Login = (props) => {
                 </div>
                 <div className="auth-field">
                   <label htmlFor="password">Password</label>
-                  <Field
-                    name="password"
-                    type="password"
-                    placeholder="Enter your password"
-                    className={`form-control ${errors.password && touched.password ? "is-invalid" : ""}`}
-                  />
+                  <div className="password-wrapper">
+                    <Field
+                      name="password"
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Enter your password"
+                      className={`form-control ${errors.password && touched.password ? "is-invalid" : ""}`}
+                    />
+                    <button
+                      type="button"
+                      className="password-toggle"
+                      onClick={() => setShowPassword(!showPassword)}
+                      tabIndex={-1}
+                    >
+                      {showPassword ? (
+                        <svg
+                          width="16"
+                          height="16"
+                          viewBox="0 0 16 16"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="1.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="M2 8s2.5-4.5 6-4.5S14 8 14 8s-2.5 4.5-6 4.5S2 8 2 8z" />
+                          <circle cx="8" cy="8" r="2" />
+                          <line x1="2.5" y1="2.5" x2="13.5" y2="13.5" />
+                        </svg>
+                      ) : (
+                        <svg
+                          width="16"
+                          height="16"
+                          viewBox="0 0 16 16"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="1.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="M2 8s2.5-4.5 6-4.5S14 8 14 8s-2.5 4.5-6 4.5S2 8 2 8z" />
+                          <circle cx="8" cy="8" r="2" />
+                        </svg>
+                      )}
+                    </button>
+                  </div>
                   <ErrorMessage
                     name="password"
                     component="div"

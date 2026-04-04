@@ -14,9 +14,9 @@
   --text-secondary: #667085;
   --border: #e1e4e8;
   --radius: 10px;
-  --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
-  --shadow-md: 0 4px 16px rgba(0,0,0,0.08);
-  --shadow-lg: 0 8px 30px rgba(0,0,0,0.12);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.12);
   --transition: 0.2s ease;
   --gradient: linear-gradient(135deg, #4a90d9 0%, #357abd 100%);
 }
@@ -30,8 +30,9 @@
 
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
-    'Helvetica Neue', Arial, sans-serif;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+    Arial, sans-serif;
   background: var(--bg);
   color: var(--text);
   -webkit-font-smoothing: antialiased;
@@ -489,7 +490,9 @@ a {
   border: 1px solid #d0d5dd;
   padding: 9px 12px;
   font-size: 0.9rem;
-  transition: border-color var(--transition), box-shadow var(--transition);
+  transition:
+    border-color var(--transition),
+    box-shadow var(--transition);
 }
 
 .auth-field .form-control:focus {
@@ -499,6 +502,34 @@ a {
 
 .auth-field .form-control.is-invalid {
   border-color: #dc3545;
+}
+
+.password-wrapper {
+  position: relative;
+}
+
+.password-wrapper .form-control {
+  padding-right: 40px;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #98a2b3;
+  transition: color 0.2s;
+}
+
+.password-toggle:hover {
+  color: #344054;
 }
 
 .auth-error {
@@ -804,8 +835,14 @@ a {
 }
 
 @keyframes filterSlideDown {
-  from { opacity: 0; transform: translateY(-8px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .filter-grid {
@@ -1225,7 +1262,9 @@ a {
   border: 1px solid #d0d5dd;
   padding: 8px 12px;
   font-size: 0.9rem;
-  transition: border-color var(--transition), box-shadow var(--transition);
+  transition:
+    border-color var(--transition),
+    box-shadow var(--transition);
 }
 
 .tf-field .form-control:focus {
@@ -1298,8 +1337,14 @@ a {
 }
 
 @keyframes tfSlideIn {
-  from { opacity: 0; transform: translateY(-8px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Submit */
@@ -1428,14 +1473,29 @@ a {
 }
 
 @keyframes msDropIn {
-  from { opacity: 0; transform: translateY(-4px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-.ms-dropdown-menu::-webkit-scrollbar { width: 5px; }
-.ms-dropdown-menu::-webkit-scrollbar-track { background: transparent; }
-.ms-dropdown-menu::-webkit-scrollbar-thumb { background: #c5d3e8; border-radius: 3px; }
-.ms-dropdown-menu::-webkit-scrollbar-thumb:hover { background: #94b0d4; }
+.ms-dropdown-menu::-webkit-scrollbar {
+  width: 5px;
+}
+.ms-dropdown-menu::-webkit-scrollbar-track {
+  background: transparent;
+}
+.ms-dropdown-menu::-webkit-scrollbar-thumb {
+  background: #c5d3e8;
+  border-radius: 3px;
+}
+.ms-dropdown-menu::-webkit-scrollbar-thumb:hover {
+  background: #94b0d4;
+}
 
 .ms-dropdown-item {
   display: flex;
@@ -1451,11 +1511,26 @@ a {
   margin: 0;
 }
 
-.ms-dropdown-item span { flex: 1; line-height: 1.35; letter-spacing: 0.01em; }
-.ms-dropdown-item:hover { background: var(--primary-light); border-left-color: #b8d4f0; }
-.ms-dropdown-item.checked { background: #e8f0fe; border-left-color: var(--primary); }
-.ms-dropdown-item.checked span { font-weight: 600; color: #1a5ea8; }
-.ms-dropdown-item:not(:last-child) { border-bottom: 1px solid #f2f3f5; }
+.ms-dropdown-item span {
+  flex: 1;
+  line-height: 1.35;
+  letter-spacing: 0.01em;
+}
+.ms-dropdown-item:hover {
+  background: var(--primary-light);
+  border-left-color: #b8d4f0;
+}
+.ms-dropdown-item.checked {
+  background: #e8f0fe;
+  border-left-color: var(--primary);
+}
+.ms-dropdown-item.checked span {
+  font-weight: 600;
+  color: #1a5ea8;
+}
+.ms-dropdown-item:not(:last-child) {
+  border-bottom: 1px solid #f2f3f5;
+}
 
 /* Custom checkbox */
 .ms-dropdown-item input[type="checkbox"] {
@@ -1474,7 +1549,7 @@ a {
   background: #fff;
   margin: 0;
   padding: 0;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
 .ms-dropdown-item:hover input[type="checkbox"] {
@@ -1672,9 +1747,16 @@ a {
   overflow-y: auto;
 }
 
-.ss-options::-webkit-scrollbar { width: 5px; }
-.ss-options::-webkit-scrollbar-track { background: transparent; }
-.ss-options::-webkit-scrollbar-thumb { background: #c5d3e8; border-radius: 3px; }
+.ss-options::-webkit-scrollbar {
+  width: 5px;
+}
+.ss-options::-webkit-scrollbar-track {
+  background: transparent;
+}
+.ss-options::-webkit-scrollbar-thumb {
+  background: #c5d3e8;
+  border-radius: 3px;
+}
 
 .ss-option {
   padding: 9px 14px;
@@ -1922,9 +2004,15 @@ a {
     min-width: 80px;
   }
 
-  .tasks-table .td-num { text-align: right; }
-  .tasks-table .td-time { text-align: right; }
-  .tasks-table .td-status { text-align: right; }
+  .tasks-table .td-num {
+    text-align: right;
+  }
+  .tasks-table .td-time {
+    text-align: right;
+  }
+  .tasks-table .td-status {
+    text-align: right;
+  }
 
   .tasks-table .td-actions {
     justify-content: flex-end;
