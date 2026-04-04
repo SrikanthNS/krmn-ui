@@ -1,9 +1,30 @@
 import React from "react";
 
-const ITEMS_PER_PAGE = 20;
+const DEFAULT_ITEMS_PER_PAGE = 20;
+const ALLOWED_PAGE_SIZES = [10, 20, 50, 100];
 
-const Pagination = ({ currentPage, totalItems, onPageChange }) => {
-  const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
+const PageSizeSelect = ({ value, onChange }) => (
+  <select
+    className="form-control form-control-sm"
+    style={{ width: 70, display: "inline-block" }}
+    value={value}
+    onChange={(e) => onChange(Number(e.target.value))}
+  >
+    {ALLOWED_PAGE_SIZES.map((size) => (
+      <option key={size} value={size}>
+        {size}
+      </option>
+    ))}
+  </select>
+);
+
+const Pagination = ({
+  currentPage,
+  totalItems,
+  onPageChange,
+  itemsPerPage = DEFAULT_ITEMS_PER_PAGE,
+}) => {
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
 
   if (totalPages <= 1) return null;
 
@@ -80,5 +101,5 @@ const Pagination = ({ currentPage, totalItems, onPageChange }) => {
   );
 };
 
-export { ITEMS_PER_PAGE };
+export { DEFAULT_ITEMS_PER_PAGE, ALLOWED_PAGE_SIZES, PageSizeSelect };
 export default Pagination;

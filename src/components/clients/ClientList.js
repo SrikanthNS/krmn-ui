@@ -7,11 +7,18 @@ import {
   findClientByName,
   retrieveClients,
 } from "../../slices/clients";
-import Pagination, { ITEMS_PER_PAGE } from "../Pagination";
+import Pagination, {
+  DEFAULT_ITEMS_PER_PAGE,
+  PageSizeSelect,
+} from "../Pagination";
 
 const ClientList = () => {
   const [searchName, setSearchName] = useState("");
   const clients = useSelector((state) => state.client);
+  const { user: currentUser } = useSelector((state) => state.auth);
+  const userItemsPerPage = currentUser?.itemsPerPage || DEFAULT_ITEMS_PER_PAGE;
+  const [sessionPageSize, setSessionPageSize] = useState(null);
+  const itemsPerPage = sessionPageSize || userItemsPerPage;
   const dispatch = useDispatch();
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -46,11 +53,16 @@ const ClientList = () => {
         <h4 className="page-title">&#128101; Clients</h4>
         <div className="page-header-actions">
           {clients.length > 0 && (
-            <button className="btn btn-sm btn-outline-danger" onClick={removeAllClients}>
+            <button
+              className="btn btn-sm btn-outline-danger"
+              onClick={removeAllClients}
+            >
               Remove All
             </button>
           )}
-          <Link to="/addClient" className="btn btn-sm btn-primary">+ Add Client</Link>
+          <Link to="/addClient" className="btn btn-sm btn-primary">
+            + Add Client
+          </Link>
         </div>
       </div>
 
@@ -68,6 +80,45 @@ const ClientList = () => {
         </button>
       </div>
 
+      {/* Top Pagination */}
+      {clients && clients.length > 0 && (
+        <div className="d-flex justify-content-between align-items-center mt-2 mb-2">
+          <span style={{ fontSize: "0.85rem" }}>
+            Showing{" "}
+            <strong>
+              {Math.min((currentPage - 1) * itemsPerPage + 1, clients.length)}–
+              {Math.min(currentPage * itemsPerPage, clients.length)}
+            </strong>{" "}
+            of <strong>{clients.length}</strong> client
+            {clients.length !== 1 ? "s" : ""}
+          </span>
+          <Pagination
+            currentPage={currentPage}
+            totalItems={clients.length}
+            onPageChange={setCurrentPage}
+            itemsPerPage={itemsPerPage}
+          />
+          <span
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 4,
+              fontSize: "0.85rem",
+            }}
+          >
+            Show{" "}
+            <PageSizeSelect
+              value={itemsPerPage}
+              onChange={(v) => {
+                setSessionPageSize(v);
+                setCurrentPage(1);
+              }}
+            />{" "}
+            / page
+          </span>
+        </div>
+      )}
+
       <div className="list-table-wrapper">
         <table className="list-table">
           <thead>
@@ -80,18 +131,30 @@ const ClientList = () => {
           <tbody>
             {clients.length === 0 ? (
               <tr>
-                <td colSpan="3" className="list-empty-row">No clients found</td>
+                <td colSpan="3" className="list-empty-row">
+                  No clients found
+                </td>
               </tr>
             ) : (
               clients
-                .slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE)
+                .slice(
+                  (currentPage - 1) * itemsPerPage,
+                  currentPage * itemsPerPage,
+                )
                 .map((client, index) => (
                   <tr key={client.id}>
-                    <td data-label="#">{(currentPage - 1) * ITEMS_PER_PAGE + index + 1}</td>
-                    <td data-label="Name"><strong>{client.name}</strong></td>
+                    <td data-label="#">
+                      {(currentPage - 1) * itemsPerPage + index + 1}
+                    </td>
+                    <td data-label="Name">
+                      <strong>{client.name}</strong>
+                    </td>
                     <td data-label="">
                       <div className="action-btns">
-                        <Link to={"/clients/" + client.id} className="btn btn-sm btn-warning">
+                        <Link
+                          to={"/clients/" + client.id}
+                          className="btn btn-sm btn-warning"
+                        >
                           Edit
                         </Link>
                         <button
@@ -109,13 +172,42 @@ const ClientList = () => {
         </table>
       </div>
 
-      {clients && clients.length > ITEMS_PER_PAGE && (
-        <div className="d-flex justify-content-center mt-3">
+      {/* Bottom Pagination */}
+      {clients && clients.length > 0 && (
+        <div className="d-flex justify-content-between align-items-center mt-3">
+          <span style={{ fontSize: "0.85rem" }}>
+            Showing{" "}
+            <strong>
+              {Math.min((currentPage - 1) * itemsPerPage + 1, clients.length)}–
+              {Math.min(currentPage * itemsPerPage, clients.length)}
+            </strong>{" "}
+            of <strong>{clients.length}</strong> client
+            {clients.length !== 1 ? "s" : ""}
+          </span>
           <Pagination
             currentPage={currentPage}
             totalItems={clients.length}
             onPageChange={setCurrentPage}
+            itemsPerPage={itemsPerPage}
           />
+          <span
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 4,
+              fontSize: "0.85rem",
+            }}
+          >
+            Show{" "}
+            <PageSizeSelect
+              value={itemsPerPage}
+              onChange={(v) => {
+                setSessionPageSize(v);
+                setCurrentPage(1);
+              }}
+            />{" "}
+            / page
+          </span>
         </div>
       )}
     </div>

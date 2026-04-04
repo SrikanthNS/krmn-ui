@@ -10,7 +10,10 @@ import {
   downloadTasks,
 } from "../../slices/tasks";
 import { retrieveReviewers, retrieveAllUsers } from "../../slices/users";
-import Pagination, { ITEMS_PER_PAGE } from "../Pagination";
+import Pagination, {
+  DEFAULT_ITEMS_PER_PAGE,
+  PageSizeSelect,
+} from "../Pagination";
 import MultiSelectDropdown from "../MultiSelectDropdown";
 
 const truncate = (text, max = 80) =>
@@ -42,6 +45,9 @@ const TasksList = () => {
   const { reviewers, users } = useSelector((state) => state.user);
   const dispatch = useDispatch();
   const { user: currentUser } = useSelector((state) => state.auth);
+  const userItemsPerPage = currentUser?.itemsPerPage || DEFAULT_ITEMS_PER_PAGE;
+  const [sessionPageSize, setSessionPageSize] = useState(null);
+  const itemsPerPage = sessionPageSize || userItemsPerPage;
   const [showUserCol, setShowUserCol] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
@@ -562,26 +568,50 @@ const TasksList = () => {
 
       {/* Top Pagination */}
       {sortedTasks && sortedTasks.length > 0 && (
-        <div className="tasks-footer tasks-footer-top">
-          <div className="tasks-summary">
-            <span>
-              Showing{" "}
-              <strong>
-                {Math.min(
-                  (currentPage - 1) * ITEMS_PER_PAGE + 1,
-                  sortedTasks.length,
-                )}
-                –{Math.min(currentPage * ITEMS_PER_PAGE, sortedTasks.length)}
-              </strong>{" "}
-              of <strong>{sortedTasks.length}</strong> task
-              {sortedTasks.length !== 1 ? "s" : ""}
-            </span>
-          </div>
+        <div
+          className="tasks-footer tasks-footer-top"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          <span style={{ fontSize: "0.85rem" }}>
+            Showing{" "}
+            <strong>
+              {Math.min(
+                (currentPage - 1) * itemsPerPage + 1,
+                sortedTasks.length,
+              )}
+              –{Math.min(currentPage * itemsPerPage, sortedTasks.length)}
+            </strong>{" "}
+            of <strong>{sortedTasks.length}</strong> task
+            {sortedTasks.length !== 1 ? "s" : ""}
+          </span>
           <Pagination
             currentPage={currentPage}
             totalItems={sortedTasks.length}
             onPageChange={setCurrentPage}
+            itemsPerPage={itemsPerPage}
           />
+          <span
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 4,
+              fontSize: "0.85rem",
+            }}
+          >
+            Show{" "}
+            <PageSizeSelect
+              value={itemsPerPage}
+              onChange={(v) => {
+                setSessionPageSize(v);
+                setCurrentPage(1);
+              }}
+            />{" "}
+            / page
+          </span>
         </div>
       )}
 
@@ -627,8 +657,8 @@ const TasksList = () => {
           <tbody>
             {sortedTasks
               .slice(
-                (currentPage - 1) * ITEMS_PER_PAGE,
-                currentPage * ITEMS_PER_PAGE,
+                (currentPage - 1) * itemsPerPage,
+                currentPage * itemsPerPage,
               )
               .map((task, index) => (
                 <tr
@@ -644,7 +674,7 @@ const TasksList = () => {
                   }
                 >
                   <td className="td-num" data-label="#">
-                    {(currentPage - 1) * ITEMS_PER_PAGE + index + 1}
+                    {(currentPage - 1) * itemsPerPage + index + 1}
                   </td>
                   {showUserCol && (
                     <td className="td-user" data-label="User">
@@ -778,20 +808,26 @@ const TasksList = () => {
 
       {/* Summary & Pagination */}
       {sortedTasks && sortedTasks.length > 0 && (
-        <div className="tasks-footer">
-          <div className="tasks-summary">
-            <span>
-              Showing{" "}
-              <strong>
-                {Math.min(
-                  (currentPage - 1) * ITEMS_PER_PAGE + 1,
-                  sortedTasks.length,
-                )}
-                –{Math.min(currentPage * ITEMS_PER_PAGE, sortedTasks.length)}
-              </strong>{" "}
-              of <strong>{sortedTasks.length}</strong> task
-              {sortedTasks.length !== 1 ? "s" : ""}
-            </span>
+        <div
+          className="tasks-footer"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          <span style={{ fontSize: "0.85rem" }}>
+            Showing{" "}
+            <strong>
+              {Math.min(
+                (currentPage - 1) * itemsPerPage + 1,
+                sortedTasks.length,
+              )}
+              –{Math.min(currentPage * itemsPerPage, sortedTasks.length)}
+            </strong>{" "}
+            of <strong>{sortedTasks.length}</strong> task
+            {sortedTasks.length !== 1 ? "s" : ""}
+            {" | "}
             <span
               title={`${sortedTasks.reduce((sum, t) => sum + (t.minutesSpent || 0), 0)} minutes total`}
             >
@@ -810,12 +846,31 @@ const TasksList = () => {
                 })()}
               </strong>
             </span>
-          </div>
+          </span>
           <Pagination
             currentPage={currentPage}
             totalItems={sortedTasks.length}
             onPageChange={setCurrentPage}
+            itemsPerPage={itemsPerPage}
           />
+          <span
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 4,
+              fontSize: "0.85rem",
+            }}
+          >
+            Show{" "}
+            <PageSizeSelect
+              value={itemsPerPage}
+              onChange={(v) => {
+                setSessionPageSize(v);
+                setCurrentPage(1);
+              }}
+            />{" "}
+            / page
+          </span>
         </div>
       )}
     </div>

@@ -4,14 +4,23 @@ import UserService from "../../services/user.service";
 import { updateUser } from "../../slices/users";
 
 const User = (props) => {
-  const [currentUser, setCurrentUser] = useState({ id: null, username: "", email: "" });
+  const [currentUser, setCurrentUser] = useState({
+    id: null,
+    username: "",
+    email: "",
+  });
+  const [selectedRoles, setSelectedRoles] = useState([]);
   const [message, setMessage] = useState("");
   const [isError, setIsError] = useState(false);
   const dispatch = useDispatch();
 
   useEffect(() => {
     UserService.get(props.match.params.id)
-      .then((response) => setCurrentUser(response.data))
+      .then((response) => {
+        setCurrentUser(response.data);
+        const roleNames = (response.data.roles || []).map((r) => r.name);
+        setSelectedRoles(roleNames);
+      })
       .catch((e) => console.log(e));
   }, [props.match.params.id]);
 
@@ -20,8 +29,23 @@ const User = (props) => {
     setCurrentUser({ ...currentUser, [name]: value });
   };
 
+  const toggleRole = (role) => {
+    setSelectedRoles((prev) =>
+      prev.includes(role) ? prev.filter((r) => r !== role) : [...prev, role],
+    );
+  };
+
   const updateContent = () => {
-    dispatch(updateUser({ id: currentUser.id, data: currentUser }))
+    dispatch(
+      updateUser({
+        id: currentUser.id,
+        data: {
+          username: currentUser.username,
+          email: currentUser.email,
+          roles: selectedRoles,
+        },
+      }),
+    )
       .unwrap()
       .then(() => {
         setMessage("User updated successfully!");
@@ -42,7 +66,12 @@ const User = (props) => {
         </div>
         <div className="auth-card-body">
           {currentUser && (
-            <form onSubmit={(e) => { e.preventDefault(); updateContent(); }}>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                updateContent();
+              }}
+            >
               <div className="auth-field">
                 <label htmlFor="username">Username</label>
                 <input
@@ -65,8 +94,32 @@ const User = (props) => {
                   onChange={handleInputChange}
                 />
               </div>
+              <div className="auth-field">
+                <label>Roles</label>
+                <div className="d-flex gap-3">
+                  {["user", "moderator", "admin"].map((role) => (
+                    <div key={role} className="form-check">
+                      <input
+                        className="form-check-input"
+                        type="checkbox"
+                        id={`edit-role-${role}`}
+                        checked={selectedRoles.includes(role)}
+                        onChange={() => toggleRole(role)}
+                      />
+                      <label
+                        className="form-check-label"
+                        htmlFor={`edit-role-${role}`}
+                      >
+                        {role.charAt(0).toUpperCase() + role.slice(1)}
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              </div>
               <div className="d-flex gap-2 mt-3">
-                <button type="submit" className="btn btn-primary flex-fill">Update</button>
+                <button type="submit" className="btn btn-primary flex-fill">
+                  Update
+                </button>
                 <button
                   type="button"
                   className="btn btn-outline-secondary flex-fill"
@@ -76,7 +129,10 @@ const User = (props) => {
                 </button>
               </div>
               {message && (
-                <div className={"auth-message " + (isError ? "error" : "success")} style={{ marginTop: 12 }}>
+                <div
+                  className={"auth-message " + (isError ? "error" : "success")}
+                  style={{ marginTop: 12 }}
+                >
                   {message}
                 </div>
               )}

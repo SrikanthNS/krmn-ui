@@ -46,6 +46,10 @@ const get = (id) => {
   return http.get(`/users/${id}`, { headers: authHeader() });
 };
 
+const updatePreferences = (data) => {
+  return http.put("/users/preferences", data, { headers: authHeader() });
+};
+
 const UserService = {
   get,
   getPublicContent,
@@ -58,6 +62,7 @@ const UserService = {
   update,
   deactivate,
   activate,
+  updatePreferences,
 };
 
 export default UserService;
