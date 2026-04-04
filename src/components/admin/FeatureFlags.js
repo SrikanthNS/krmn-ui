@@ -20,7 +20,7 @@ const FeatureFlags = () => {
     dispatch(retrieveFeatureFlags());
   }, [dispatch]);
 
-  if (!currentUser || !currentUser.roles.includes("ROLE_ADMIN")) {
+  if (!currentUser || !currentUser.roles.includes("ROLE_SUPERADMIN")) {
     return <Redirect to="/" />;
   }
 

@@ -30,6 +30,7 @@ const FeatureFlags = lazy(() => import("components/admin/FeatureFlags"));
 
 const App = () => {
   const [showAdminBoard, setShowAdminBoard] = useState(false);
+  const [showSuperAdmin, setShowSuperAdmin] = useState(false);
   const [navOpen, setNavOpen] = useState(false);
   const { user: currentUser } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
@@ -49,8 +50,10 @@ const App = () => {
   useEffect(() => {
     if (currentUser) {
       setShowAdminBoard(currentUser.roles.includes("ROLE_ADMIN"));
+      setShowSuperAdmin(currentUser.roles.includes("ROLE_SUPERADMIN"));
     } else {
       setShowAdminBoard(false);
+      setShowSuperAdmin(false);
     }
     EventBus.on("logout", () => logOut());
     return () => EventBus.remove("logout");
@@ -140,8 +143,12 @@ const App = () => {
                           <span className="nav-icon">&#10133;</span> Add Staff
                         </Link>
                       </li>
+                    </>
+                  )}
+                  {showSuperAdmin && (
+                    <>
                       <li className="nav-section">
-                        <span className="nav-section-label">Admin</span>
+                        <span className="nav-section-label">Super Admin</span>
                         <Link
                           to="/feature-flags"
                           className="nav-menu-item"
