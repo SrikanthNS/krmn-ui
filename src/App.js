@@ -7,7 +7,7 @@ import EventBus from "./common/EventBus";
 import Loader from "./components/Loader";
 import Login from "./components/Login";
 import { history } from "./helpers/history";
-import { logout } from "./slices/auth";
+import { logout, clearSessionMessage } from "./slices/auth";
 import { clearMessage } from "./slices/message";
 import AuthVerify from "./common/AuthVerify";
 import { capitalize } from "lodash";
@@ -32,10 +32,18 @@ const App = () => {
   const [showAdminBoard, setShowAdminBoard] = useState(false);
   const [showSuperAdmin, setShowSuperAdmin] = useState(false);
   const [navOpen, setNavOpen] = useState(false);
-  const { user: currentUser } = useSelector((state) => state.auth);
+  const { user: currentUser, sessionExpiredMessage } = useSelector(
+    (state) => state.auth,
+  );
   const dispatch = useDispatch();
 
   const closeNav = () => setNavOpen(false);
+
+  useEffect(() => {
+    if (sessionExpiredMessage) {
+      history.push("/login");
+    }
+  }, [sessionExpiredMessage]);
 
   useEffect(() => {
     history.listen(() => {
@@ -269,6 +277,22 @@ const App = () => {
 
         {/* ── Main Content ── */}
         <main className="app-main">
+          {sessionExpiredMessage && (
+            <div
+              className="alert alert-warning alert-dismissible fade show m-3"
+              role="alert"
+            >
+              {sessionExpiredMessage}
+              <button
+                type="button"
+                className="close"
+                aria-label="Close"
+                onClick={() => dispatch(clearSessionMessage())}
+              >
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+          )}
           <Suspense
             fallback={
               <div className="text-center mt-5">

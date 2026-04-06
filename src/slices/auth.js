@@ -54,8 +54,8 @@ export const logout = createAsyncThunk("auth/logout", () => {
 });
 
 const initialState = user
-  ? { isLoggedIn: true, user }
-  : { isLoggedIn: false, user: null };
+  ? { isLoggedIn: true, user, sessionExpiredMessage: null }
+  : { isLoggedIn: false, user: null, sessionExpiredMessage: null };
 
 const authSlice = createSlice({
   name: "auth",
@@ -81,6 +81,15 @@ const authSlice = createSlice({
         }
       }
     },
+    sessionExpired: (state) => {
+      state.isLoggedIn = false;
+      state.user = null;
+      state.sessionExpiredMessage =
+        "Your session has expired. Please log in again.";
+    },
+    clearSessionMessage: (state) => {
+      state.sessionExpiredMessage = null;
+    },
   },
   extraReducers: {
     [register.fulfilled]: (state, action) => {
@@ -92,6 +101,7 @@ const authSlice = createSlice({
     [login.fulfilled]: (state, action) => {
       state.isLoggedIn = true;
       state.user = action.payload.user;
+      state.sessionExpiredMessage = null;
     },
     [login.rejected]: (state, action) => {
       state.isLoggedIn = false;
@@ -105,5 +115,10 @@ const authSlice = createSlice({
 });
 
 const { reducer, actions } = authSlice;
-export const { updateItemsPerPage, updateDarkModeSettings } = actions;
+export const {
+  updateItemsPerPage,
+  updateDarkModeSettings,
+  sessionExpired,
+  clearSessionMessage,
+} = actions;
 export default reducer;
