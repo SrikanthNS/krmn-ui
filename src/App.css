@@ -933,7 +933,7 @@ a {
 }
 
 .tasks-table tbody tr:hover {
-  background-color: #e9ecef !important;
+  background-color: #e9ecef;
 }
 
 .tasks-table tbody td {
@@ -2162,7 +2162,8 @@ a {
 
 [data-theme="dark"] .tasks-table tbody tr:hover,
 [data-theme="dark"] .list-table tbody tr:hover {
-  background: #1c2128;
+  background: #1c2128 !important;
+  color: var(--text) !important;
 }
 
 [data-theme="dark"] .tasks-table tbody td,
@@ -2255,6 +2256,120 @@ a {
 [data-theme="dark"] .dark-mode-option:hover {
   border-color: var(--primary);
   background: rgba(88, 166, 255, 0.08);
+}
+
+/* Dark mode hover fixes — ensure text remains visible */
+[data-theme="dark"] .table-hover tbody tr:hover,
+[data-theme="dark"] .table tbody tr:hover {
+  background: #1c2128 !important;
+  color: var(--text) !important;
+}
+
+[data-theme="dark"] .table-hover tbody tr:hover td,
+[data-theme="dark"] .table tbody tr:hover td {
+  color: var(--text) !important;
+}
+
+[data-theme="dark"] .tasks-table tbody tr:hover td,
+[data-theme="dark"] .list-table tbody tr:hover td {
+  color: var(--text) !important;
+}
+
+[data-theme="dark"] .row-inactive {
+  background-color: #1c2128;
+  color: var(--text-secondary);
+  opacity: 0.6;
+}
+
+[data-theme="dark"] .row-inactive td {
+  color: var(--text-secondary) !important;
+}
+
+[data-theme="dark"] .row-inactive:hover {
+  opacity: 1;
+}
+
+[data-theme="dark"] a:hover,
+[data-theme="dark"] .nav-menu-item:hover {
+  color: var(--primary) !important;
+}
+
+[data-theme="dark"] .list-group-item {
+  background: var(--surface);
+  border-color: var(--border);
+  color: var(--text);
+}
+
+[data-theme="dark"] .list-group-item:hover {
+  background: #1c2128;
+  color: var(--text);
+}
+
+[data-theme="dark"] .dropdown-menu {
+  background: var(--surface);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .dropdown-item {
+  color: var(--text);
+}
+
+[data-theme="dark"] .dropdown-item:hover,
+[data-theme="dark"] .dropdown-item:focus {
+  background: #1c2128;
+  color: var(--text);
+}
+
+[data-theme="dark"] .ms-dropdown-item:hover {
+  background: #1c2128;
+  color: var(--text);
+}
+
+[data-theme="dark"] .btn-outline-primary:hover {
+  background: var(--primary);
+  color: #fff !important;
+}
+
+[data-theme="dark"] .btn-outline-secondary:hover {
+  background: #30363d;
+  color: var(--text) !important;
+}
+
+[data-theme="dark"] .btn-outline-danger:hover {
+  background: #f85149;
+  color: #fff !important;
+}
+
+[data-theme="dark"] .page-link {
+  background: var(--surface);
+  border-color: var(--border);
+  color: var(--text);
+}
+
+[data-theme="dark"] .page-link:hover {
+  background: #1c2128;
+  color: var(--primary);
+}
+
+[data-theme="dark"] .page-item.active .page-link {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}
+
+[data-theme="dark"] .page-item.disabled .page-link {
+  background: #0d1117;
+  border-color: var(--border);
+  color: var(--text-secondary);
+}
+
+[data-theme="dark"] .nav-user-link:hover {
+  color: var(--primary) !important;
+}
+
+[data-theme="dark"] .badge-light {
+  background: #30363d;
+  color: var(--text);
 }
 
 /* Theme toggle button */
