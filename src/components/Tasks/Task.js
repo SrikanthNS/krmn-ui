@@ -119,7 +119,21 @@ const Task = (props) => {
 
   return (
     <div className="col-md-12 table-responsive-md">
-      <h4>Edit Task</h4>
+      <div className="d-flex align-items-center gap-3 mb-2">
+        <button
+          className="back-link"
+          style={{
+            background: "none",
+            border: "none",
+            padding: 0,
+            cursor: "pointer",
+          }}
+          onClick={() => props.history.push("/taskList")}
+        >
+          &larr; Back to Tasks
+        </button>
+        <h4 className="mb-0">Edit Task</h4>
+      </div>
       <hr></hr>
       {currentTask ? (
         <div className="edit-form">

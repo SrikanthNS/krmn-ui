@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useDispatch } from "react-redux";
+import { Link } from "react-router-dom";
 import { createClient } from "../../slices/clients";
 import { ClientForm } from "./ClientForm";
 
@@ -19,6 +20,9 @@ const AddClient = () => {
     <div className="auth-page">
       <div className="auth-card" style={{ maxWidth: 480 }}>
         <div className="auth-card-header">
+          <Link to="/clientList" className="back-link">
+            &larr; Back to Clients
+          </Link>
           <div className="auth-avatar">&#128101;</div>
           <h2>Add Client</h2>
           <p>Register a new client for task tracking</p>

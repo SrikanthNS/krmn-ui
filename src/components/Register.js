@@ -2,6 +2,7 @@ import { ErrorMessage, Field, Form, Formik } from "formik";
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import * as Yup from "yup";
+import { Link } from "react-router-dom";
 import { register } from "../slices/auth";
 import { clearMessage } from "../slices/message";
 
@@ -10,6 +11,11 @@ const Register = () => {
   const [selectedRoles, setSelectedRoles] = useState(["user"]);
   const [showPassword, setShowPassword] = useState(false);
   const { message } = useSelector((state) => state.message);
+  const { user: loggedInUser } = useSelector((state) => state.auth);
+  const isSuperAdmin = loggedInUser?.roles?.includes("ROLE_SUPERADMIN");
+  const availableRoles = isSuperAdmin
+    ? ["user", "moderator", "admin", "superadmin"]
+    : ["user", "moderator", "admin"];
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -54,6 +60,9 @@ const Register = () => {
     <div className="auth-page">
       <div className="auth-card" style={{ maxWidth: 480 }}>
         <div className="auth-card-header">
+          <Link to="/staffList" className="back-link">
+            &larr; Back to Staff
+          </Link>
           <div className="auth-avatar">&#128100;</div>
           <h2>Add Staff</h2>
           <p>Create a new staff account</p>
@@ -151,8 +160,8 @@ const Register = () => {
                     </div>
                     <div className="auth-field">
                       <label>Roles</label>
-                      <div className="d-flex gap-3">
-                        {["user", "moderator", "admin"].map((role) => (
+                      <div className="d-flex gap-3 flex-wrap">
+                        {availableRoles.map((role) => (
                           <div key={role} className="form-check">
                             <input
                               className="form-check-input"

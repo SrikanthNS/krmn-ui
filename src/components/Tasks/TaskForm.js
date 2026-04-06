@@ -271,6 +271,27 @@ export const TaskForm = ({ saveTask }) => {
             </div>
           </div>
 
+          {/* Reviewer (conditional) */}
+          {taskStatus === "completed" && (
+            <div className="tf-row tf-row-full tf-slide-in">
+              <div className="tf-field">
+                <label htmlFor="reviewerId">
+                  Approved By <small className="text-muted">(optional)</small>
+                </label>
+                <SearchableSelect
+                  id="reviewerId"
+                  placeholder="Choose an approver…"
+                  options={(reviewers || []).map((r) => ({
+                    value: String(r.id),
+                    label: r.username,
+                  }))}
+                  value={reviewerId || ""}
+                  onChange={(val) => setReviewerId(val || null)}
+                />
+              </div>
+            </div>
+          )}
+
           {/* Assign To (admin/mod only) */}
           {isAdminOrMod && (
             <div className="tf-row tf-row-full tf-slide-in">
@@ -290,27 +311,6 @@ export const TaskForm = ({ saveTask }) => {
                     }))}
                   value={assigneeId}
                   onChange={(val) => setAssigneeId(val || "")}
-                />
-              </div>
-            </div>
-          )}
-
-          {/* Reviewer (conditional) */}
-          {taskStatus === "completed" && (
-            <div className="tf-row tf-row-full tf-slide-in">
-              <div className="tf-field">
-                <label htmlFor="reviewerId">
-                  Approved By <small className="text-muted">(optional)</small>
-                </label>
-                <SearchableSelect
-                  id="reviewerId"
-                  placeholder="Choose an approver…"
-                  options={(reviewers || []).map((r) => ({
-                    value: String(r.id),
-                    label: r.username,
-                  }))}
-                  value={reviewerId || ""}
-                  onChange={(val) => setReviewerId(val || null)}
                 />
               </div>
             </div>

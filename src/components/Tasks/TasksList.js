@@ -361,6 +361,15 @@ const TasksList = () => {
       {/* Filter Panel */}
       {showFilters && (
         <div className="filter-panel">
+          <div className="filter-panel-header">
+            <span className="filter-panel-title">&#9776; Filters</span>
+            <button
+              className="btn btn-sm btn-outline-secondary"
+              onClick={() => setShowFilters(false)}
+            >
+              ✕ Close
+            </button>
+          </div>
           <div className="filter-grid">
             {/* Description */}
             <div className="filter-field">
@@ -478,19 +487,27 @@ const TasksList = () => {
             </div>
           </div>
 
-          {activeFilterCount > 0 && (
-            <div className="filter-actions">
-              <button
-                className="btn btn-sm btn-outline-danger"
-                onClick={clearAllFilters}
-              >
-                Clear All Filters
-              </button>
-              <span className="filter-result-count">
-                {totalItems} tasks match
-              </span>
-            </div>
-          )}
+          <div className="filter-actions">
+            {activeFilterCount > 0 && (
+              <>
+                <button
+                  className="btn btn-sm btn-outline-danger"
+                  onClick={clearAllFilters}
+                >
+                  Clear All Filters
+                </button>
+                <span className="filter-result-count">
+                  {totalItems} tasks match
+                </span>
+              </>
+            )}
+            <button
+              className="btn btn-sm btn-primary ml-auto"
+              onClick={() => setShowFilters(false)}
+            >
+              Done
+            </button>
+          </div>
         </div>
       )}
 

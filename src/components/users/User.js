@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import UserService from "../../services/user.service";
 import { updateUser } from "../../slices/users";
 
@@ -12,6 +12,11 @@ const User = (props) => {
   const [selectedRoles, setSelectedRoles] = useState([]);
   const [message, setMessage] = useState("");
   const [isError, setIsError] = useState(false);
+  const { user: loggedInUser } = useSelector((state) => state.auth);
+  const isSuperAdmin = loggedInUser?.roles?.includes("ROLE_SUPERADMIN");
+  const availableRoles = isSuperAdmin
+    ? ["user", "moderator", "admin", "superadmin"]
+    : ["user", "moderator", "admin"];
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -96,8 +101,8 @@ const User = (props) => {
               </div>
               <div className="auth-field">
                 <label>Roles</label>
-                <div className="d-flex gap-3">
-                  {["user", "moderator", "admin"].map((role) => (
+                <div className="d-flex gap-3 flex-wrap">
+                  {availableRoles.map((role) => (
                     <div key={role} className="form-check">
                       <input
                         className="form-check-input"

@@ -61,6 +61,9 @@ const AddTask = () => {
     <div className="add-task-page">
       <div className="add-task-card">
         <div className="add-task-card-header">
+          <Link to="/taskList" className="back-link">
+            &larr; Back to Tasks
+          </Link>
           <h4>
             <span role="img" aria-label="task">
               &#128221;
