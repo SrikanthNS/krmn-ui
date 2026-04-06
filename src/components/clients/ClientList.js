@@ -60,7 +60,7 @@ const ClientList = () => {
   };
 
   const PaginationBar = () => (
-    <div className="d-flex justify-content-between align-items-center">
+    <div className="pagination-bar">
       <span style={{ fontSize: "0.85rem" }}>
         Showing{" "}
         <strong>

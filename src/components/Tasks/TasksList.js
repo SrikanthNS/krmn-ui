@@ -517,14 +517,7 @@ const TasksList = () => {
 
       {/* Top Pagination */}
       {tasks && tasks.length > 0 && (
-        <div
-          className="tasks-footer tasks-footer-top"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
-        >
+        <div className="tasks-footer tasks-footer-top">
           <span style={{ fontSize: "0.85rem" }}>
             Showing{" "}
             <strong>
@@ -748,14 +741,7 @@ const TasksList = () => {
 
       {/* Summary & Pagination */}
       {tasks && tasks.length > 0 && (
-        <div
-          className="tasks-footer"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
-        >
+        <div className="tasks-footer">
           <span style={{ fontSize: "0.85rem" }}>
             Showing{" "}
             <strong>
