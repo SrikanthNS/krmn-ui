@@ -2,17 +2,15 @@ import moment from "moment";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
+import TaskDataService from "../../services/task.service";
 import { retrieveClients } from "../../slices/clients";
-import { deleteTask, retrieveTasks, downloadTasks } from "../../slices/tasks";
+import { deleteTask, retrieveTasks } from "../../slices/tasks";
 import { retrieveReviewers, retrieveAllUsers } from "../../slices/users";
 import Pagination, {
   DEFAULT_ITEMS_PER_PAGE,
   PageSizeSelect,
 } from "../Pagination";
 import MultiSelectDropdown from "../MultiSelectDropdown";
-
-const truncate = (text, max = 80) =>
-  text && text.length > max ? text.slice(0, max) + "…" : text;
 
 const StatusBadge = React.memo(({ task }) => {
   const status = task.status || (task.completed ? "completed" : "in-progress");
@@ -35,9 +33,14 @@ const StatusBadge = React.memo(({ task }) => {
 });
 
 const TasksList = () => {
-  const allTasks = useSelector((state) => state.tasks);
-  const clients = useSelector((state) => state.client);
-  const { reviewers, users } = useSelector((state) => state.user);
+  const {
+    rows: tasks = [],
+    totalItems = 0,
+    totalPages = 0,
+    statusCounts = {},
+  } = useSelector((state) => state.tasks);
+  const { rows: clientRows = [] } = useSelector((state) => state.client);
+  const { reviewers = [], users = [] } = useSelector((state) => state.user);
   const dispatch = useDispatch();
   const { user: currentUser } = useSelector((state) => state.auth);
   const prefEnabled = currentUser?.featureFlags?.user_preferences;
@@ -51,8 +54,8 @@ const TasksList = () => {
   const [showUserCol, setShowUserCol] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
-  const [sortColumn, setSortColumn] = useState(null);
-  const [sortDirection, setSortDirection] = useState("asc");
+  const [sortColumn, setSortColumn] = useState("date");
+  const [sortDirection, setSortDirection] = useState("desc");
 
   // Filter state
   const [filterDesc, setFilterDesc] = useState("");
@@ -68,12 +71,12 @@ const TasksList = () => {
   // Build lookup maps for O(1) name resolution
   const clientMap = useMemo(() => {
     const map = {};
-    if (clients)
-      clients.forEach((c) => {
+    if (clientRows)
+      clientRows.forEach((c) => {
         map[c.id] = c.name;
       });
     return map;
-  }, [clients]);
+  }, [clientRows]);
 
   const reviewerMap = useMemo(() => {
     const map = {};
@@ -92,21 +95,6 @@ const TasksList = () => {
       });
     return map;
   }, [users]);
-
-  // Status counts from total (unfiltered) tasks
-  const statusCounts = useMemo(() => {
-    if (!allTasks) return { todo: 0, inProgress: 0, completed: 0 };
-    return allTasks.reduce(
-      (acc, t) => {
-        const s = t.status || (t.completed ? "completed" : "in-progress");
-        if (s === "todo") acc.todo++;
-        else if (s === "completed") acc.completed++;
-        else acc.inProgress++;
-        return acc;
-      },
-      { todo: 0, inProgress: 0, completed: 0 },
-    );
-  }, [allTasks]);
 
   // Derived: active filter count
   const activeFilterCount = useMemo(() => {
@@ -133,39 +121,65 @@ const TasksList = () => {
     filterDateTo,
   ]);
 
-  // Filtered tasks
-  const tasks = useMemo(() => {
-    if (!allTasks) return [];
-    return allTasks.filter((t) => {
-      if (
-        filterDesc &&
-        !t.description?.toLowerCase().includes(filterDesc.toLowerCase())
-      )
-        return false;
-      if (filterClient.length && !filterClient.includes(String(t.clientId)))
-        return false;
-      if (filterUser.length && !filterUser.includes(String(t.userId)))
-        return false;
-      if (filterCategory.length && !filterCategory.includes(t.billingCategory))
-        return false;
-      if (filterType.length && !filterType.includes(t.taskType)) return false;
-      if (
-        filterReviewer.length &&
-        !filterReviewer.includes(String(t.reviewerId))
-      )
-        return false;
-      if (filterStatus.length) {
-        const status = t.status || (t.completed ? "completed" : "in-progress");
-        if (!filterStatus.includes(status)) return false;
-      }
-      if (filterDateFrom && moment(t.date).isBefore(filterDateFrom, "day"))
-        return false;
-      if (filterDateTo && moment(t.date).isAfter(filterDateTo, "day"))
-        return false;
-      return true;
-    });
+  // Build server params and fetch
+  const fetchTasks = useCallback(
+    (page) => {
+      const params = {
+        page: page || currentPage,
+        size: itemsPerPage,
+        sortField: sortColumn,
+        sortDir: sortDirection,
+      };
+      if (filterDesc) params.description = filterDesc;
+      if (filterClient.length) params.clientId = filterClient.join(",");
+      if (filterUser.length) params.userId = filterUser.join(",");
+      if (filterCategory.length)
+        params.billingCategory = filterCategory.join(",");
+      if (filterType.length) params.taskType = filterType.join(",");
+      if (filterReviewer.length) params.reviewerId = filterReviewer.join(",");
+      if (filterStatus.length) params.status = filterStatus.join(",");
+      if (filterDateFrom) params.dateFrom = filterDateFrom;
+      if (filterDateTo) params.dateTo = filterDateTo;
+      dispatch(retrieveTasks(params));
+    },
+    [
+      dispatch,
+      currentPage,
+      itemsPerPage,
+      sortColumn,
+      sortDirection,
+      filterDesc,
+      filterClient,
+      filterUser,
+      filterCategory,
+      filterType,
+      filterReviewer,
+      filterStatus,
+      filterDateFrom,
+      filterDateTo,
+    ],
+  );
+
+  // Fetch dropdown data (full lists for filters)
+  useEffect(() => {
+    dispatch(retrieveClients({ size: 0 }));
+    dispatch(retrieveReviewers());
+    dispatch(retrieveAllUsers({ size: 0 }));
+  }, [dispatch]);
+
+  useEffect(() => {
+    setShowUserCol(currentUser && currentUser.roles.includes("ROLE_ADMIN"));
+  }, [currentUser]);
+
+  // Fetch tasks whenever page, filters, sort, or pageSize changes
+  useEffect(() => {
+    fetchTasks(currentPage);
+  }, [fetchTasks, currentPage]);
+
+  // Reset to page 1 when any filter, sort, or pageSize changes
+  useEffect(() => {
+    setCurrentPage(1);
   }, [
-    allTasks,
     filterDesc,
     filterClient,
     filterUser,
@@ -175,39 +189,10 @@ const TasksList = () => {
     filterStatus,
     filterDateFrom,
     filterDateTo,
+    sortColumn,
+    sortDirection,
+    itemsPerPage,
   ]);
-
-  // Sorted tasks
-  const sortedTasks = useMemo(() => {
-    if (!sortColumn) return tasks;
-    const sorted = [...tasks].sort((a, b) => {
-      let valA, valB;
-      switch (sortColumn) {
-        case "date":
-          valA = new Date(a.date).getTime();
-          valB = new Date(b.date).getTime();
-          break;
-        case "time":
-          valA = a.minutesSpent || 0;
-          valB = b.minutesSpent || 0;
-          break;
-        case "client":
-          valA = (clientMap[a.clientId] || "").toLowerCase();
-          valB = (clientMap[b.clientId] || "").toLowerCase();
-          break;
-        case "type":
-          valA = (a.taskType || "").toLowerCase();
-          valB = (b.taskType || "").toLowerCase();
-          break;
-        default:
-          return 0;
-      }
-      if (valA < valB) return sortDirection === "asc" ? -1 : 1;
-      if (valA > valB) return sortDirection === "asc" ? 1 : -1;
-      return 0;
-    });
-    return sorted;
-  }, [tasks, sortColumn, sortDirection, clientMap]);
 
   const handleSort = (col) => {
     if (sortColumn === col) {
@@ -227,51 +212,21 @@ const TasksList = () => {
     );
   };
 
-  // Unique task types from data
+  // Unique task types & categories from current page data + full list needs
+  // These come from our loaded dropdown data — we use full client list
   const taskTypes = useMemo(() => {
-    if (!allTasks) return [];
-    const types = new Set(allTasks.map((t) => t.taskType).filter(Boolean));
+    // We'll derive these from the visible rows for now
+    // For a perfect solution you'd have a separate endpoint
+    if (!tasks) return [];
+    const types = new Set(tasks.map((t) => t.taskType).filter(Boolean));
     return [...types].sort();
-  }, [allTasks]);
+  }, [tasks]);
 
-  // Unique billing categories from data
   const billingCategories = useMemo(() => {
-    if (!allTasks) return [];
-    const cats = new Set(
-      allTasks.map((t) => t.billingCategory).filter(Boolean),
-    );
+    if (!tasks) return [];
+    const cats = new Set(tasks.map((t) => t.billingCategory).filter(Boolean));
     return [...cats].sort();
-  }, [allTasks]);
-
-  const initFetch = useCallback(() => {
-    dispatch(retrieveClients());
-    dispatch(retrieveReviewers());
-    dispatch(retrieveAllUsers());
-    dispatch(retrieveTasks());
-  }, [dispatch]);
-
-  useEffect(() => {
-    setShowUserCol(currentUser && currentUser.roles.includes("ROLE_ADMIN"));
-  }, [currentUser]);
-
-  useEffect(() => {
-    initFetch();
-  }, [initFetch]);
-
-  // Reset to page 1 when any filter changes
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [
-    filterDesc,
-    filterClient,
-    filterUser,
-    filterCategory,
-    filterType,
-    filterReviewer,
-    filterStatus,
-    filterDateFrom,
-    filterDateTo,
-  ]);
+  }, [tasks]);
 
   const clearAllFilters = () => {
     setFilterDesc("");
@@ -289,66 +244,28 @@ const TasksList = () => {
     if (!window.confirm("Are you sure you want to delete this task?")) return;
     dispatch(deleteTask({ id }))
       .unwrap()
+      .then(() => {
+        fetchTasks(currentPage);
+      })
       .catch(() => {});
   };
 
   const download = () => {
-    const dataToExport = sortedTasks.length > 0 ? sortedTasks : tasks;
-    if (!dataToExport || dataToExport.length === 0) return;
-
-    const escCsv = (val) => {
-      const str = String(val ?? "");
-      return str.includes(",") || str.includes('"') || str.includes("\n")
-        ? `"${str.replace(/"/g, '""')}"`
-        : str;
+    const params = {
+      sortField: sortColumn,
+      sortDir: sortDirection,
     };
-
-    const headers = [
-      "Date",
-      "Client",
-      "Type",
-      "Category",
-      "Description",
-      "Time (min)",
-      "Status",
-      "Approver",
-      ...(showUserCol ? ["User", "Assigned By"] : []),
-    ];
-
-    const rows = dataToExport.map((t) => [
-      moment(t.date).format("YYYY-MM-DD"),
-      escCsv(clientMap[t.clientId] || ""),
-      escCsv(t.taskType || ""),
-      escCsv(t.billingCategory || ""),
-      escCsv(t.description || ""),
-      t.minutesSpent || 0,
-      (t.status || (t.completed ? "Completed" : "In-Progress")).replace(
-        /^\w/,
-        (c) => c.toUpperCase(),
-      ),
-      escCsv(reviewerMap[t.reviewerId] || "NA"),
-      ...(showUserCol
-        ? [
-            escCsv(userMap[t.userId] || ""),
-            escCsv(
-              t.assigner
-                ? t.assigner.username
-                : t.assignedBy
-                  ? userMap[t.assignedBy] || ""
-                  : "",
-            ),
-          ]
-        : []),
-    ]);
-
-    const csv = [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `tasks_export_${moment().format("YYYYMMDD_HHmmss")}.csv`;
-    link.click();
-    URL.revokeObjectURL(url);
+    if (filterDesc) params.description = filterDesc;
+    if (filterClient.length) params.clientId = filterClient.join(",");
+    if (filterUser.length) params.userId = filterUser.join(",");
+    if (filterCategory.length)
+      params.billingCategory = filterCategory.join(",");
+    if (filterType.length) params.taskType = filterType.join(",");
+    if (filterReviewer.length) params.reviewerId = filterReviewer.join(",");
+    if (filterStatus.length) params.status = filterStatus.join(",");
+    if (filterDateFrom) params.dateFrom = filterDateFrom;
+    if (filterDateTo) params.dateTo = filterDateTo;
+    TaskDataService.downloadAllTasks(params);
   };
 
   return (
@@ -357,26 +274,50 @@ const TasksList = () => {
       <div className="tasks-header">
         <h4 className="tasks-title">Tasks</h4>
         <div className="d-flex align-items-center gap-2 mr-auto ml-3">
-          <span className="status-badge todo" style={{ cursor: "default" }}>
-            <span className="status-badge-icon">○</span>
-            <span className="status-badge-label">Todo {statusCounts.todo}</span>
-          </span>
           <span
-            className="status-badge in-progress"
-            style={{ cursor: "default" }}
+            className={`status-badge todo${filterStatus.length === 1 && filterStatus[0] === "todo" ? " status-badge-active" : ""}`}
+            style={{ cursor: "pointer" }}
+            onClick={() =>
+              setFilterStatus((prev) =>
+                prev.length === 1 && prev[0] === "todo" ? [] : ["todo"],
+              )
+            }
           >
-            <span className="status-badge-icon">●</span>
+            <span className="status-badge-icon">○</span>
             <span className="status-badge-label">
-              In-Progress {statusCounts.inProgress}
+              Todo {statusCounts.todo || 0}
             </span>
           </span>
           <span
-            className="status-badge completed"
-            style={{ cursor: "default" }}
+            className={`status-badge in-progress${filterStatus.length === 1 && filterStatus[0] === "in-progress" ? " status-badge-active" : ""}`}
+            style={{ cursor: "pointer" }}
+            onClick={() =>
+              setFilterStatus((prev) =>
+                prev.length === 1 && prev[0] === "in-progress"
+                  ? []
+                  : ["in-progress"],
+              )
+            }
+          >
+            <span className="status-badge-icon">●</span>
+            <span className="status-badge-label">
+              In-Progress {statusCounts["in-progress"] || 0}
+            </span>
+          </span>
+          <span
+            className={`status-badge completed${filterStatus.length === 1 && filterStatus[0] === "completed" ? " status-badge-active" : ""}`}
+            style={{ cursor: "pointer" }}
+            onClick={() =>
+              setFilterStatus((prev) =>
+                prev.length === 1 && prev[0] === "completed"
+                  ? []
+                  : ["completed"],
+              )
+            }
           >
             <span className="status-badge-icon">✓</span>
             <span className="status-badge-label">
-              Completed {statusCounts.completed}
+              Completed {statusCounts.completed || 0}
             </span>
           </span>
         </div>
@@ -406,7 +347,7 @@ const TasksList = () => {
         <div className="active-filters-bar">
           <span className="filter-result-count">
             {activeFilterCount} filter{activeFilterCount > 1 ? "s" : ""} active
-            &middot; {tasks.length} of {allTasks?.length || 0} tasks
+            &middot; {totalItems} tasks
           </span>
           <button
             className="btn btn-sm btn-outline-danger"
@@ -438,7 +379,7 @@ const TasksList = () => {
               <MultiSelectDropdown
                 label="Client"
                 placeholder="All Clients"
-                options={(clients || []).map((c) => ({
+                options={(clientRows || []).map((c) => ({
                   value: c.id,
                   label: c.name,
                 }))}
@@ -546,7 +487,7 @@ const TasksList = () => {
                 Clear All Filters
               </button>
               <span className="filter-result-count">
-                {tasks.length} of {allTasks?.length || 0} tasks match
+                {totalItems} tasks match
               </span>
             </div>
           )}
@@ -554,7 +495,7 @@ const TasksList = () => {
       )}
 
       {/* Top Pagination */}
-      {sortedTasks && sortedTasks.length > 0 && (
+      {tasks && tasks.length > 0 && (
         <div
           className="tasks-footer tasks-footer-top"
           style={{
@@ -566,18 +507,15 @@ const TasksList = () => {
           <span style={{ fontSize: "0.85rem" }}>
             Showing{" "}
             <strong>
-              {Math.min(
-                (currentPage - 1) * itemsPerPage + 1,
-                sortedTasks.length,
-              )}
-              –{Math.min(currentPage * itemsPerPage, sortedTasks.length)}
+              {Math.min((currentPage - 1) * itemsPerPage + 1, totalItems)}–
+              {Math.min(currentPage * itemsPerPage, totalItems)}
             </strong>{" "}
-            of <strong>{sortedTasks.length}</strong> task
-            {sortedTasks.length !== 1 ? "s" : ""}
+            of <strong>{totalItems}</strong> task
+            {totalItems !== 1 ? "s" : ""}
           </span>
           <Pagination
             currentPage={currentPage}
-            totalItems={sortedTasks.length}
+            totalItems={totalItems}
             onPageChange={setCurrentPage}
             itemsPerPage={itemsPerPage}
           />
@@ -613,15 +551,15 @@ const TasksList = () => {
               {showUserCol && <th className="th-user">User</th>}
               <th
                 className="th-client sortable"
-                onClick={() => handleSort("client")}
+                onClick={() => handleSort("clientId")}
               >
-                Client <SortArrow col="client" />
+                Client <SortArrow col="clientId" />
               </th>
               <th
                 className="th-type sortable"
-                onClick={() => handleSort("type")}
+                onClick={() => handleSort("taskType")}
               >
-                Type <SortArrow col="type" />
+                Type <SortArrow col="taskType" />
               </th>
               <th className="th-category">Category</th>
               <th className="th-desc">Description</th>
@@ -633,9 +571,9 @@ const TasksList = () => {
               </th>
               <th
                 className="th-time sortable"
-                onClick={() => handleSort("time")}
+                onClick={() => handleSort("minutesSpent")}
               >
-                Time <SortArrow col="time" />
+                Time <SortArrow col="minutesSpent" />
               </th>
               <th className="th-status">Status</th>
               <th className="th-reviewer">Approver</th>
@@ -644,140 +582,132 @@ const TasksList = () => {
             </tr>
           </thead>
           <tbody>
-            {sortedTasks
-              .slice(
-                (currentPage - 1) * itemsPerPage,
-                currentPage * itemsPerPage,
-              )
-              .map((task, index) => (
-                <tr
-                  key={task.id || index}
-                  className={
-                    (task.status ||
-                      (task.completed ? "completed" : "in-progress")) ===
-                    "completed"
-                      ? "row-completed"
-                      : task.status === "todo"
-                        ? "row-todo"
-                        : "row-pending"
-                  }
+            {tasks.map((task, index) => (
+              <tr
+                key={task.id || index}
+                className={
+                  (task.status ||
+                    (task.completed ? "completed" : "in-progress")) ===
+                  "completed"
+                    ? "row-completed"
+                    : task.status === "todo"
+                      ? "row-todo"
+                      : "row-pending"
+                }
+              >
+                <td className="td-num" data-label="#">
+                  {(currentPage - 1) * itemsPerPage + index + 1}
+                </td>
+                {showUserCol && (
+                  <td className="td-user" data-label="User">
+                    <span
+                      className="td-user-text"
+                      title={userMap[task.userId] || ""}
+                    >
+                      {userMap[task.userId] || "—"}
+                    </span>
+                  </td>
+                )}
+                <td className="td-client" data-label="Client">
+                  <span
+                    className="td-client-text"
+                    title={clientMap[task.clientId] || ""}
+                  >
+                    {clientMap[task.clientId] || "—"}
+                  </span>
+                </td>
+                <td
+                  className="td-type"
+                  data-label="Type"
+                  title={task.taskType || ""}
                 >
-                  <td className="td-num" data-label="#">
-                    {(currentPage - 1) * itemsPerPage + index + 1}
-                  </td>
-                  {showUserCol && (
-                    <td className="td-user" data-label="User">
-                      <span
-                        className="td-user-text"
-                        title={userMap[task.userId] || ""}
-                      >
-                        {userMap[task.userId] || "—"}
-                      </span>
-                    </td>
+                  {task.taskType || "—"}
+                </td>
+                <td
+                  className="td-category"
+                  data-label="Category"
+                  title={task.billingCategory || ""}
+                >
+                  {task.billingCategory || "—"}
+                </td>
+                <td className="td-desc" data-label="Description">
+                  <span className="td-desc-text" title={task.description || ""}>
+                    {task.description}
+                  </span>
+                </td>
+                <td
+                  className="td-date"
+                  data-label="Date"
+                  title={moment(task.date).format("DD MMM YYYY")}
+                >
+                  {moment(task.date).format("DD MMM YYYY")}
+                </td>
+                <td
+                  className="td-time"
+                  data-label="Time"
+                  title={`${task.minutesSpent} min`}
+                >
+                  {task.minutesSpent} min
+                </td>
+                <td className="td-status" data-label="Status">
+                  <StatusBadge task={task} />
+                </td>
+                <td
+                  className="td-reviewer"
+                  data-label="Approver"
+                  title={reviewerMap[task.reviewerId] || "NA"}
+                >
+                  {reviewerMap[task.reviewerId] || (
+                    <span
+                      className="text-muted"
+                      style={{ fontStyle: "italic", fontSize: "0.8rem" }}
+                    >
+                      NA
+                    </span>
                   )}
-                  <td className="td-client" data-label="Client">
+                </td>
+                {showUserCol && (
+                  <td className="td-user" data-label="Assigned By">
                     <span
-                      className="td-client-text"
-                      title={clientMap[task.clientId] || ""}
-                    >
-                      {clientMap[task.clientId] || "—"}
-                    </span>
-                  </td>
-                  <td
-                    className="td-type"
-                    data-label="Type"
-                    title={task.taskType || ""}
-                  >
-                    {task.taskType || "—"}
-                  </td>
-                  <td
-                    className="td-category"
-                    data-label="Category"
-                    title={task.billingCategory || ""}
-                  >
-                    {task.billingCategory || "—"}
-                  </td>
-                  <td className="td-desc" data-label="Description">
-                    <span
-                      className="td-desc-text"
-                      title={task.description || ""}
-                    >
-                      {task.description}
-                    </span>
-                  </td>
-                  <td
-                    className="td-date"
-                    data-label="Date"
-                    title={moment(task.date).format("DD MMM YYYY")}
-                  >
-                    {moment(task.date).format("DD MMM YYYY")}
-                  </td>
-                  <td
-                    className="td-time"
-                    data-label="Time"
-                    title={`${task.minutesSpent} min`}
-                  >
-                    {task.minutesSpent} min
-                  </td>
-                  <td className="td-status" data-label="Status">
-                    <StatusBadge task={task} />
-                  </td>
-                  <td
-                    className="td-reviewer"
-                    data-label="Approver"
-                    title={reviewerMap[task.reviewerId] || "NA"}
-                  >
-                    {reviewerMap[task.reviewerId] || (
-                      <span
-                        className="text-muted"
-                        style={{ fontStyle: "italic", fontSize: "0.8rem" }}
-                      >
-                        NA
-                      </span>
-                    )}
-                  </td>
-                  {showUserCol && (
-                    <td className="td-user" data-label="Assigned By">
-                      <span
-                        className="td-user-text"
-                        title={
-                          task.assigner
-                            ? task.assigner.username
-                            : task.assignedBy
-                              ? userMap[task.assignedBy] || ""
-                              : "Self"
-                        }
-                      >
-                        {task.assigner
+                      className="td-user-text"
+                      title={
+                        task.assigner
                           ? task.assigner.username
                           : task.assignedBy
-                            ? userMap[task.assignedBy] || "—"
-                            : "Self"}
-                      </span>
-                    </td>
-                  )}
-                  <td className="td-actions" data-label="Actions">
-                    <Link
-                      to={"/tasks/" + task.id}
-                      className="btn btn-sm btn-warning mr-1"
+                            ? userMap[task.assignedBy] || ""
+                            : "Self"
+                      }
                     >
-                      Edit
-                    </Link>
-                    <button
-                      className="btn btn-sm btn-danger"
-                      onClick={() => removeTask(task.id)}
-                    >
-                      Delete
-                    </button>
+                      {task.assigner
+                        ? task.assigner.username
+                        : task.assignedBy
+                          ? userMap[task.assignedBy] || "—"
+                          : "Self"}
+                    </span>
                   </td>
-                </tr>
-              ))}
+                )}
+                <td className="td-actions" data-label="Actions">
+                  <Link
+                    to={"/tasks/" + task.id}
+                    className="btn btn-sm btn-warning mr-1"
+                  >
+                    Edit
+                  </Link>
+                  <button
+                    className="btn btn-sm btn-danger"
+                    onClick={() => removeTask(task.id)}
+                  >
+                    Delete
+                  </button>
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>
 
       {/* Empty-state message inside table */}
-      {sortedTasks.length === 0 && (
+      {tasks.length === 0 && (
         <div className="tasks-empty">
           {activeFilterCount > 0 ? (
             <>
@@ -796,7 +726,7 @@ const TasksList = () => {
       )}
 
       {/* Summary & Pagination */}
-      {sortedTasks && sortedTasks.length > 0 && (
+      {tasks && tasks.length > 0 && (
         <div
           className="tasks-footer"
           style={{
@@ -808,22 +738,19 @@ const TasksList = () => {
           <span style={{ fontSize: "0.85rem" }}>
             Showing{" "}
             <strong>
-              {Math.min(
-                (currentPage - 1) * itemsPerPage + 1,
-                sortedTasks.length,
-              )}
-              –{Math.min(currentPage * itemsPerPage, sortedTasks.length)}
+              {Math.min((currentPage - 1) * itemsPerPage + 1, totalItems)}–
+              {Math.min(currentPage * itemsPerPage, totalItems)}
             </strong>{" "}
-            of <strong>{sortedTasks.length}</strong> task
-            {sortedTasks.length !== 1 ? "s" : ""}
+            of <strong>{totalItems}</strong> task
+            {totalItems !== 1 ? "s" : ""}
             {" | "}
             <span
-              title={`${sortedTasks.reduce((sum, t) => sum + (t.minutesSpent || 0), 0)} minutes total`}
+              title={`${tasks.reduce((sum, t) => sum + (t.minutesSpent || 0), 0)} minutes on this page`}
             >
-              Total:{" "}
+              Page Total:{" "}
               <strong>
                 {(() => {
-                  const totalMin = sortedTasks.reduce(
+                  const totalMin = tasks.reduce(
                     (sum, t) => sum + (t.minutesSpent || 0),
                     0,
                   );
@@ -838,7 +765,7 @@ const TasksList = () => {
           </span>
           <Pagination
             currentPage={currentPage}
-            totalItems={sortedTasks.length}
+            totalItems={totalItems}
             onPageChange={setCurrentPage}
             itemsPerPage={itemsPerPage}
           />

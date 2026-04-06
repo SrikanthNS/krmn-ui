@@ -2,7 +2,13 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import TaskService from "../services/task.service";
 import { setMessage } from "./message";
 
-const initialState = [];
+const initialState = {
+  rows: [],
+  totalItems: 0,
+  totalPages: 0,
+  currentPage: 1,
+  statusCounts: { todo: 0, "in-progress": 0, completed: 0 },
+};
 
 export const createTask = createAsyncThunk(
   "task/create",
@@ -43,23 +49,18 @@ export const createTask = createAsyncThunk(
   },
 );
 
-export const retrieveTasks = createAsyncThunk("tasks/retrieve", async () => {
-  const res = await TaskService.getAll();
-  return res.data;
-});
+export const retrieveTasks = createAsyncThunk(
+  "tasks/retrieve",
+  async (params = {}) => {
+    const res = await TaskService.getAll(params);
+    return res.data;
+  },
+);
 
 export const downloadTasks = createAsyncThunk("tasks/download", async () => {
   const res = await TaskService.downloadAllTasks();
   return res.data;
 });
-
-export const retrieveCurrentUserTasks = createAsyncThunk(
-  "currentUsertasks/retrieve",
-  async () => {
-    const res = await TaskService.getAll();
-    return res.data;
-  },
-);
 
 export const updateTask = createAsyncThunk(
   "tasks/update",
@@ -85,43 +86,34 @@ export const deleteAllTasks = createAsyncThunk("Tasks/deleteAll", async () => {
   return res.data;
 });
 
-export const findTasksByTitle = createAsyncThunk(
-  "Tasks/findByTitle",
-  async ({ description }) => {
-    const res = await TaskService.findByDesc(description);
-    return res.data;
-  },
-);
-
 const TaskSlice = createSlice({
   name: "Task",
   initialState,
   extraReducers: {
     [createTask.fulfilled]: (state, action) => {
-      state.push(action.payload);
+      // After create, the list will be re-fetched
     },
     [retrieveTasks.fulfilled]: (state, action) => {
-      return [...action.payload];
-    },
-    [retrieveCurrentUserTasks.fulfilled]: (state, action) => {
-      return [...action.payload];
+      state.rows = action.payload.rows;
+      state.totalItems = action.payload.totalItems;
+      state.totalPages = action.payload.totalPages;
+      state.currentPage = action.payload.currentPage;
+      if (action.payload.statusCounts) {
+        state.statusCounts = action.payload.statusCounts;
+      }
     },
     [updateTask.fulfilled]: (state, action) => {
-      const index = state.findIndex((Task) => Task.id === action.payload.id);
-      state[index] = {
-        ...state[index],
-        ...action.payload,
-      };
+      const index = state.rows.findIndex((t) => t.id === action.payload.id);
+      if (index !== -1) {
+        state.rows[index] = { ...state.rows[index], ...action.payload };
+      }
     },
     [deleteTask.fulfilled]: (state, action) => {
-      let index = state.findIndex(({ id }) => id === action.payload.id);
-      state.splice(index, 1);
+      state.rows = state.rows.filter((t) => t.id !== action.payload.id);
+      state.totalItems = Math.max(0, state.totalItems - 1);
     },
-    [deleteAllTasks.fulfilled]: (state, action) => {
-      return [];
-    },
-    [findTasksByTitle.fulfilled]: (state, action) => {
-      return [...action.payload];
+    [deleteAllTasks.fulfilled]: (state) => {
+      return { ...initialState };
     },
   },
 });

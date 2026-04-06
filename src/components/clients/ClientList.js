@@ -1,11 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
-import {
-  deleteClient,
-  findClientByName,
-  retrieveClients,
-} from "../../slices/clients";
+import { deleteClient, retrieveClients } from "../../slices/clients";
 import Pagination, {
   DEFAULT_ITEMS_PER_PAGE,
   PageSizeSelect,
@@ -13,7 +9,9 @@ import Pagination, {
 
 const ClientList = () => {
   const [searchName, setSearchName] = useState("");
-  const clients = useSelector((state) => state.client);
+  const { rows: clients = [], totalItems = 0 } = useSelector(
+    (state) => state.client,
+  );
   const { user: currentUser } = useSelector((state) => state.auth);
   const prefEnabled = currentUser?.featureFlags?.user_preferences;
   const userItemsPerPage = prefEnabled
@@ -26,25 +24,80 @@ const ClientList = () => {
   const dispatch = useDispatch();
   const [currentPage, setCurrentPage] = useState(1);
 
-  const initFetch = useCallback(() => {
-    dispatch(retrieveClients());
-  }, [dispatch]);
+  const fetchClients = useCallback(
+    (page) => {
+      const params = {
+        page: page || currentPage,
+        size: itemsPerPage,
+      };
+      if (searchName) params.name = searchName;
+      dispatch(retrieveClients(params));
+    },
+    [dispatch, currentPage, itemsPerPage, searchName],
+  );
 
   useEffect(() => {
-    initFetch();
-  }, [initFetch]);
+    fetchClients(currentPage);
+  }, [fetchClients, currentPage]);
+
+  // Reset to page 1 when search or pageSize changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchName, itemsPerPage]);
 
   const removeClient = (id) => {
     if (!window.confirm("Are you sure you want to delete this client?")) return;
     dispatch(deleteClient({ id }))
       .unwrap()
+      .then(() => {
+        fetchClients(currentPage);
+      })
       .catch(() => {});
   };
 
   const findByName = () => {
     setCurrentPage(1);
-    dispatch(findClientByName({ name: searchName }));
   };
+
+  const PaginationBar = () => (
+    <div className="d-flex justify-content-between align-items-center">
+      <span style={{ fontSize: "0.85rem" }}>
+        Showing{" "}
+        <strong>
+          {Math.min((currentPage - 1) * itemsPerPage + 1, totalItems)}–
+          {Math.min(currentPage * itemsPerPage, totalItems)}
+        </strong>{" "}
+        of <strong>{totalItems}</strong> client
+        {totalItems !== 1 ? "s" : ""}
+      </span>
+      <Pagination
+        currentPage={currentPage}
+        totalItems={totalItems}
+        onPageChange={setCurrentPage}
+        itemsPerPage={itemsPerPage}
+      />
+      {prefEnabled && (
+        <span
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 4,
+            fontSize: "0.85rem",
+          }}
+        >
+          Show{" "}
+          <PageSizeSelect
+            value={itemsPerPage}
+            onChange={(v) => {
+              setSessionPageSize(v);
+              setCurrentPage(1);
+            }}
+          />{" "}
+          / page
+        </span>
+      )}
+    </div>
+  );
 
   return (
     <div className="page-container">
@@ -73,42 +126,8 @@ const ClientList = () => {
 
       {/* Top Pagination */}
       {clients && clients.length > 0 && (
-        <div className="d-flex justify-content-between align-items-center mt-2 mb-2">
-          <span style={{ fontSize: "0.85rem" }}>
-            Showing{" "}
-            <strong>
-              {Math.min((currentPage - 1) * itemsPerPage + 1, clients.length)}–
-              {Math.min(currentPage * itemsPerPage, clients.length)}
-            </strong>{" "}
-            of <strong>{clients.length}</strong> client
-            {clients.length !== 1 ? "s" : ""}
-          </span>
-          <Pagination
-            currentPage={currentPage}
-            totalItems={clients.length}
-            onPageChange={setCurrentPage}
-            itemsPerPage={itemsPerPage}
-          />
-          {prefEnabled && (
-            <span
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 4,
-                fontSize: "0.85rem",
-              }}
-            >
-              Show{" "}
-              <PageSizeSelect
-                value={itemsPerPage}
-                onChange={(v) => {
-                  setSessionPageSize(v);
-                  setCurrentPage(1);
-                }}
-              />{" "}
-              / page
-            </span>
-          )}
+        <div className="mt-2 mb-2">
+          <PaginationBar />
         </div>
       )}
 
@@ -129,37 +148,32 @@ const ClientList = () => {
                 </td>
               </tr>
             ) : (
-              clients
-                .slice(
-                  (currentPage - 1) * itemsPerPage,
-                  currentPage * itemsPerPage,
-                )
-                .map((client, index) => (
-                  <tr key={client.id}>
-                    <td data-label="#">
-                      {(currentPage - 1) * itemsPerPage + index + 1}
-                    </td>
-                    <td data-label="Name">
-                      <strong>{client.name}</strong>
-                    </td>
-                    <td data-label="">
-                      <div className="action-btns">
-                        <Link
-                          to={"/clients/" + client.id}
-                          className="btn btn-sm btn-warning"
-                        >
-                          Edit
-                        </Link>
-                        <button
-                          className="btn btn-sm btn-danger"
-                          onClick={() => removeClient(client.id)}
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
+              clients.map((client, index) => (
+                <tr key={client.id}>
+                  <td data-label="#">
+                    {(currentPage - 1) * itemsPerPage + index + 1}
+                  </td>
+                  <td data-label="Name">
+                    <strong>{client.name}</strong>
+                  </td>
+                  <td data-label="">
+                    <div className="action-btns">
+                      <Link
+                        to={"/clients/" + client.id}
+                        className="btn btn-sm btn-warning"
+                      >
+                        Edit
+                      </Link>
+                      <button
+                        className="btn btn-sm btn-danger"
+                        onClick={() => removeClient(client.id)}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))
             )}
           </tbody>
         </table>
@@ -167,42 +181,8 @@ const ClientList = () => {
 
       {/* Bottom Pagination */}
       {clients && clients.length > 0 && (
-        <div className="d-flex justify-content-between align-items-center mt-3">
-          <span style={{ fontSize: "0.85rem" }}>
-            Showing{" "}
-            <strong>
-              {Math.min((currentPage - 1) * itemsPerPage + 1, clients.length)}–
-              {Math.min(currentPage * itemsPerPage, clients.length)}
-            </strong>{" "}
-            of <strong>{clients.length}</strong> client
-            {clients.length !== 1 ? "s" : ""}
-          </span>
-          <Pagination
-            currentPage={currentPage}
-            totalItems={clients.length}
-            onPageChange={setCurrentPage}
-            itemsPerPage={itemsPerPage}
-          />
-          {prefEnabled && (
-            <span
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 4,
-                fontSize: "0.85rem",
-              }}
-            >
-              Show{" "}
-              <PageSizeSelect
-                value={itemsPerPage}
-                onChange={(v) => {
-                  setSessionPageSize(v);
-                  setCurrentPage(1);
-                }}
-              />{" "}
-              / page
-            </span>
-          )}
+        <div className="mt-3">
+          <PaginationBar />
         </div>
       )}
     </div>

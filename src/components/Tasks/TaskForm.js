@@ -9,7 +9,7 @@ import SearchableSelect from "../SearchableSelect";
 const RequiredMark = () => <span className="tf-required">*</span>;
 
 export const TaskForm = ({ saveTask }) => {
-  const clients = useSelector((state) => state.client);
+  const { rows: clients } = useSelector((state) => state.client);
   const { reviewers, users } = useSelector((state) => state.user);
   const { user: currentUser } = useSelector((state) => state.auth);
   const [taskStatus, setTaskStatus] = useState("in-progress");

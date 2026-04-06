@@ -11,9 +11,9 @@ const AddTask = () => {
   const dispatch = useDispatch();
 
   const initFetch = useCallback(() => {
-    dispatch(retrieveClients());
+    dispatch(retrieveClients({ size: 0 }));
     dispatch(retrieveReviewers());
-    dispatch(retrieveAllUsers());
+    dispatch(retrieveAllUsers({ size: 0 }));
   }, [dispatch]);
 
   useEffect(() => {

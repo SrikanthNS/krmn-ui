@@ -1,7 +1,13 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import UserService from "../services/user.service";
 
-const initialState = { reviewers: [], users: [] };
+const initialState = {
+  reviewers: [],
+  users: [],
+  totalItems: 0,
+  totalPages: 0,
+  currentPage: 1,
+};
 
 export const retrieveReviewers = createAsyncThunk(
   "users/reviewer",
@@ -11,15 +17,10 @@ export const retrieveReviewers = createAsyncThunk(
   },
 );
 
-export const retrieveAllUsers = createAsyncThunk("users/list", async () => {
-  const res = await UserService.retrieveAllUsers();
-  return res.data;
-});
-
-export const findUserByName = createAsyncThunk(
-  "users/findByName",
-  async ({ name }) => {
-    const res = await UserService.findByName(name);
+export const retrieveAllUsers = createAsyncThunk(
+  "users/list",
+  async (params = {}) => {
+    const res = await UserService.retrieveAllUsers(params);
     return res.data;
   },
 );
@@ -56,10 +57,10 @@ const userSlice = createSlice({
       state.reviewers = action.payload;
     },
     [retrieveAllUsers.fulfilled]: (state, action) => {
-      state.users = action.payload;
-    },
-    [findUserByName.fulfilled]: (state, action) => {
-      return [...action.payload];
+      state.users = action.payload.rows;
+      state.totalItems = action.payload.totalItems;
+      state.totalPages = action.payload.totalPages;
+      state.currentPage = action.payload.currentPage;
     },
     [updateUser.fulfilled]: (state, action) => {
       const index = state.users.findIndex((u) => u.id === action.payload.id);

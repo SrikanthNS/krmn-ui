@@ -2,13 +2,41 @@ import http from "../http-common";
 import authHeader from "./auth-header";
 // import fs from 'fs';
 
-const getAll = () => {
-  return http.get("/tasks", { headers: authHeader() });
+const getAll = (params = {}) => {
+  const query = new URLSearchParams();
+  if (params.page) query.set("page", params.page);
+  if (params.size) query.set("size", params.size);
+  if (params.sortField) query.set("sortField", params.sortField);
+  if (params.sortDir) query.set("sortDir", params.sortDir);
+  if (params.description) query.set("description", params.description);
+  if (params.status) query.set("status", params.status);
+  if (params.clientId) query.set("clientId", params.clientId);
+  if (params.userId) query.set("userId", params.userId);
+  if (params.reviewerId) query.set("reviewerId", params.reviewerId);
+  if (params.taskType) query.set("taskType", params.taskType);
+  if (params.billingCategory)
+    query.set("billingCategory", params.billingCategory);
+  if (params.dateFrom) query.set("dateFrom", params.dateFrom);
+  if (params.dateTo) query.set("dateTo", params.dateTo);
+  return http.get(`/tasks?${query.toString()}`, { headers: authHeader() });
 };
 
-const downloadAllTasks = async () => {
+const downloadAllTasks = async (params = {}) => {
+  const query = new URLSearchParams();
+  if (params.sortField) query.set("sortField", params.sortField);
+  if (params.sortDir) query.set("sortDir", params.sortDir);
+  if (params.description) query.set("description", params.description);
+  if (params.status) query.set("status", params.status);
+  if (params.clientId) query.set("clientId", params.clientId);
+  if (params.userId) query.set("userId", params.userId);
+  if (params.reviewerId) query.set("reviewerId", params.reviewerId);
+  if (params.taskType) query.set("taskType", params.taskType);
+  if (params.billingCategory)
+    query.set("billingCategory", params.billingCategory);
+  if (params.dateFrom) query.set("dateFrom", params.dateFrom);
+  if (params.dateTo) query.set("dateTo", params.dateTo);
   return http
-    .get("/tasks/download", {
+    .get(`/tasks/download?${query.toString()}`, {
       responseType: "blob",
       headers: {
         ...authHeader(),

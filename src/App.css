@@ -1069,6 +1069,14 @@ a {
   color: #047857;
 }
 
+.status-badge-active {
+  box-shadow: 0 0 0 2px currentColor;
+  transform: scale(1.08);
+  transition:
+    transform 0.15s,
+    box-shadow 0.15s;
+}
+
 .tasks-table .th-reviewer,
 .tasks-table .td-reviewer {
   width: 90px;
@@ -2361,6 +2369,12 @@ a {
   background: #0d1117;
   border-color: var(--border);
   color: var(--text-secondary);
+}
+
+[data-theme="dark"] .tasks-footer,
+[data-theme="dark"] .tasks-footer-top {
+  background: var(--card-bg);
+  color: var(--text);
 }
 
 [data-theme="dark"] .nav-user-link:hover {

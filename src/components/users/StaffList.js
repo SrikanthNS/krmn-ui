@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import {
-  findUserByName,
   retrieveAllUsers,
   deactivateUser,
   activateUser,
@@ -14,7 +13,7 @@ import Pagination, {
 
 const StaffList = () => {
   const [searchName, setSearchName] = useState("");
-  const { users } = useSelector((state) => state.user);
+  const { users = [], totalItems = 0 } = useSelector((state) => state.user);
   const { user: currentUser } = useSelector((state) => state.auth);
   const prefEnabled = currentUser?.featureFlags?.user_preferences;
   const userItemsPerPage = prefEnabled
@@ -27,17 +26,29 @@ const StaffList = () => {
   const dispatch = useDispatch();
   const [currentPage, setCurrentPage] = useState(1);
 
-  const initFetch = useCallback(() => {
-    dispatch(retrieveAllUsers());
-  }, [dispatch]);
+  const fetchUsers = useCallback(
+    (page) => {
+      const params = {
+        page: page || currentPage,
+        size: itemsPerPage,
+      };
+      if (searchName) params.name = searchName;
+      dispatch(retrieveAllUsers(params));
+    },
+    [dispatch, currentPage, itemsPerPage, searchName],
+  );
 
   useEffect(() => {
-    initFetch();
-  }, [initFetch]);
+    fetchUsers(currentPage);
+  }, [fetchUsers, currentPage]);
+
+  // Reset to page 1 when search or pageSize changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchName, itemsPerPage]);
 
   const findByName = () => {
     setCurrentPage(1);
-    dispatch(findUserByName({ name: searchName }));
   };
 
   const handleDeactivate = (id) => {
@@ -45,6 +56,9 @@ const StaffList = () => {
       return;
     dispatch(deactivateUser({ id }))
       .unwrap()
+      .then(() => {
+        fetchUsers(currentPage);
+      })
       .catch(() => {});
   };
 
@@ -53,8 +67,51 @@ const StaffList = () => {
       return;
     dispatch(activateUser({ id }))
       .unwrap()
+      .then(() => {
+        fetchUsers(currentPage);
+      })
       .catch(() => {});
   };
+
+  const PaginationBar = () => (
+    <div className="d-flex justify-content-between align-items-center">
+      <span style={{ fontSize: "0.85rem" }}>
+        Showing{" "}
+        <strong>
+          {Math.min((currentPage - 1) * itemsPerPage + 1, totalItems)}–
+          {Math.min(currentPage * itemsPerPage, totalItems)}
+        </strong>{" "}
+        of <strong>{totalItems}</strong> user
+        {totalItems !== 1 ? "s" : ""}
+      </span>
+      <Pagination
+        currentPage={currentPage}
+        totalItems={totalItems}
+        onPageChange={setCurrentPage}
+        itemsPerPage={itemsPerPage}
+      />
+      {prefEnabled && (
+        <span
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 4,
+            fontSize: "0.85rem",
+          }}
+        >
+          Show{" "}
+          <PageSizeSelect
+            value={itemsPerPage}
+            onChange={(v) => {
+              setSessionPageSize(v);
+              setCurrentPage(1);
+            }}
+          />{" "}
+          / page
+        </span>
+      )}
+    </div>
+  );
 
   return (
     <div className="page-container">
@@ -83,42 +140,8 @@ const StaffList = () => {
 
       {/* Top Pagination */}
       {users && users.length > 0 && (
-        <div className="d-flex justify-content-between align-items-center mt-2 mb-2">
-          <span style={{ fontSize: "0.85rem" }}>
-            Showing{" "}
-            <strong>
-              {Math.min((currentPage - 1) * itemsPerPage + 1, users.length)}–
-              {Math.min(currentPage * itemsPerPage, users.length)}
-            </strong>{" "}
-            of <strong>{users.length}</strong> user
-            {users.length !== 1 ? "s" : ""}
-          </span>
-          <Pagination
-            currentPage={currentPage}
-            totalItems={users.length}
-            onPageChange={setCurrentPage}
-            itemsPerPage={itemsPerPage}
-          />
-          {prefEnabled && (
-            <span
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 4,
-                fontSize: "0.85rem",
-              }}
-            >
-              Show{" "}
-              <PageSizeSelect
-                value={itemsPerPage}
-                onChange={(v) => {
-                  setSessionPageSize(v);
-                  setCurrentPage(1);
-                }}
-              />{" "}
-              / page
-            </span>
-          )}
+        <div className="mt-2 mb-2">
+          <PaginationBar />
         </div>
       )}
 
@@ -140,59 +163,54 @@ const StaffList = () => {
                 </td>
               </tr>
             ) : (
-              users
-                .slice(
-                  (currentPage - 1) * itemsPerPage,
-                  currentPage * itemsPerPage,
-                )
-                .map((user, index) => (
-                  <tr
-                    key={user.id}
-                    className={user.isActive === false ? "row-inactive" : ""}
-                  >
-                    <td data-label="#">
-                      {(currentPage - 1) * itemsPerPage + index + 1}
-                    </td>
-                    <td data-label="Name">
-                      <strong>{user.username}</strong>
-                    </td>
-                    <td data-label="Status">
-                      <span
-                        className={
-                          "status-pill " +
-                          (user.isActive === false ? "inactive" : "active")
-                        }
+              users.map((user, index) => (
+                <tr
+                  key={user.id}
+                  className={user.isActive === false ? "row-inactive" : ""}
+                >
+                  <td data-label="#">
+                    {(currentPage - 1) * itemsPerPage + index + 1}
+                  </td>
+                  <td data-label="Name">
+                    <strong>{user.username}</strong>
+                  </td>
+                  <td data-label="Status">
+                    <span
+                      className={
+                        "status-pill " +
+                        (user.isActive === false ? "inactive" : "active")
+                      }
+                    >
+                      {user.isActive === false ? "Inactive" : "Active"}
+                    </span>
+                  </td>
+                  <td data-label="">
+                    <div className="action-btns">
+                      <Link
+                        to={"/users/" + user.id}
+                        className="btn btn-sm btn-warning"
                       >
-                        {user.isActive === false ? "Inactive" : "Active"}
-                      </span>
-                    </td>
-                    <td data-label="">
-                      <div className="action-btns">
-                        <Link
-                          to={"/users/" + user.id}
-                          className="btn btn-sm btn-warning"
+                        Edit
+                      </Link>
+                      {user.isActive === false ? (
+                        <button
+                          className="btn btn-sm btn-success"
+                          onClick={() => handleActivate(user.id)}
                         >
-                          Edit
-                        </Link>
-                        {user.isActive === false ? (
-                          <button
-                            className="btn btn-sm btn-success"
-                            onClick={() => handleActivate(user.id)}
-                          >
-                            Activate
-                          </button>
-                        ) : (
-                          <button
-                            className="btn btn-sm btn-danger"
-                            onClick={() => handleDeactivate(user.id)}
-                          >
-                            Deactivate
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                          Activate
+                        </button>
+                      ) : (
+                        <button
+                          className="btn btn-sm btn-danger"
+                          onClick={() => handleDeactivate(user.id)}
+                        >
+                          Deactivate
+                        </button>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ))
             )}
           </tbody>
         </table>
@@ -200,42 +218,8 @@ const StaffList = () => {
 
       {/* Bottom Pagination */}
       {users && users.length > 0 && (
-        <div className="d-flex justify-content-between align-items-center mt-3">
-          <span style={{ fontSize: "0.85rem" }}>
-            Showing{" "}
-            <strong>
-              {Math.min((currentPage - 1) * itemsPerPage + 1, users.length)}–
-              {Math.min(currentPage * itemsPerPage, users.length)}
-            </strong>{" "}
-            of <strong>{users.length}</strong> user
-            {users.length !== 1 ? "s" : ""}
-          </span>
-          <Pagination
-            currentPage={currentPage}
-            totalItems={users.length}
-            onPageChange={setCurrentPage}
-            itemsPerPage={itemsPerPage}
-          />
-          {prefEnabled && (
-            <span
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 4,
-                fontSize: "0.85rem",
-              }}
-            >
-              Show{" "}
-              <PageSizeSelect
-                value={itemsPerPage}
-                onChange={(v) => {
-                  setSessionPageSize(v);
-                  setCurrentPage(1);
-                }}
-              />{" "}
-              / page
-            </span>
-          )}
+        <div className="mt-3">
+          <PaginationBar />
         </div>
       )}
     </div>

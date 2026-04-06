@@ -3,7 +3,8 @@ import moment from "moment";
 import { useDispatch, useSelector } from "react-redux";
 import TaskDataService from "../../services/task.service";
 import { deleteTask, updateTask } from "../../slices/tasks";
-import { retrieveAllUsers } from "../../slices/users";
+import { retrieveAllUsers, retrieveReviewers } from "../../slices/users";
+import { retrieveClients } from "../../slices/clients";
 import SearchableSelect from "../SearchableSelect";
 
 const Task = (props) => {
@@ -20,7 +21,7 @@ const Task = (props) => {
     billingCategory: "",
   };
 
-  const clients = useSelector((state) => state.client);
+  const { rows: clients } = useSelector((state) => state.client);
   const { reviewers, users } = useSelector((state) => state.user);
   const { user: currentUser } = useSelector((state) => state.auth);
   const [currentTask, setCurrentTask] = useState(initialTaskState);
@@ -33,7 +34,9 @@ const Task = (props) => {
   const dispatch = useDispatch();
 
   const initFetch = useCallback(() => {
-    dispatch(retrieveAllUsers());
+    dispatch(retrieveClients({ size: 0 }));
+    dispatch(retrieveReviewers());
+    dispatch(retrieveAllUsers({ size: 0 }));
   }, [dispatch]);
 
   useEffect(() => {
@@ -131,7 +134,7 @@ const Task = (props) => {
                 id="clients"
               >
                 <option value="">Select Client</option>
-                {clients.map((e) => (
+                {(clients || []).map((e) => (
                   <option
                     key={`client-${e.id}`}
                     selected={currentTask.clientId === e.id}
@@ -295,7 +298,7 @@ const Task = (props) => {
                   id="reviewers"
                 >
                   <option value={null}>Select Reviewer</option>
-                  {reviewers.map((e) => (
+                  {(reviewers || []).map((e) => (
                     <option
                       selected={currentTask.reviewerId === e.id}
                       key={`reviewer-${e.id}`}

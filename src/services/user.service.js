@@ -18,11 +18,16 @@ const getAdminBoard = () => {
 };
 
 const retrieveReviewers = () => {
-  return http.get("/reviewer");
+  return http.get("/reviewer", { headers: authHeader() });
 };
 
-const retrieveAllUsers = () => {
-  return http.get("/userList", { headers: authHeader() });
+const retrieveAllUsers = (params = {}) => {
+  const query = new URLSearchParams();
+  if (params.page) query.set("page", params.page);
+  if (params.size !== undefined && params.size !== null)
+    query.set("size", params.size);
+  if (params.name) query.set("name", params.name);
+  return http.get(`/userList?${query.toString()}`, { headers: authHeader() });
 };
 
 const findByName = (name) => {
