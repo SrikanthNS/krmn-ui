@@ -1,9 +1,10 @@
 import React from "react";
 import { useSelector } from "react-redux";
-import { selectIsLoading } from "../slices/loading";
+import { selectIsLoading, selectLoadingMessage } from "../slices/loading";
 
 const Loader = () => {
   const isLoading = useSelector(selectIsLoading);
+  const message = useSelector(selectLoadingMessage);
 
   if (!isLoading) return null;
 
@@ -13,7 +14,7 @@ const Loader = () => {
         <div className="spinner-border text-primary" role="status">
           <span className="sr-only">Loading...</span>
         </div>
-        <span className="global-loader-text">Loading...</span>
+        <span className="global-loader-text">{message || "Loading..."}</span>
       </div>
     </div>
   );

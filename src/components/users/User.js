@@ -130,7 +130,7 @@ const User = (props) => {
                   className="btn btn-outline-secondary flex-fill"
                   onClick={() => props.history.push("/staffList")}
                 >
-                  &larr; Back
+                  Cancel
                 </button>
               </div>
               {message && (

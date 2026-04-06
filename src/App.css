@@ -2330,6 +2330,42 @@ a {
   color: var(--text) !important;
 }
 
+/* Dark mode: mobile card layout backgrounds */
+[data-theme="dark"] .list-table tbody tr {
+  background: var(--surface);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .list-table tbody td {
+  border-bottom-color: #21262d;
+}
+
+[data-theme="dark"] .list-table tbody td::before {
+  color: var(--text-secondary);
+}
+
+[data-theme="dark"] .tasks-table tbody tr {
+  background: var(--surface);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .tasks-table tbody td {
+  border-bottom-color: #21262d;
+}
+
+[data-theme="dark"] .tasks-table tbody td::before {
+  color: var(--text-secondary);
+}
+
+[data-theme="dark"] .list-table-wrapper {
+  background: var(--surface);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .list-empty-row {
+  color: var(--text-secondary);
+}
+
 [data-theme="dark"] .row-inactive {
   background-color: #1c2128;
   color: var(--text-secondary);

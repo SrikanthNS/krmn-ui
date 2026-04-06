@@ -6,6 +6,7 @@ import TaskDataService from "../../services/task.service";
 import { retrieveClients } from "../../slices/clients";
 import { deleteTask, retrieveTasks } from "../../slices/tasks";
 import { retrieveReviewers, retrieveAllUsers } from "../../slices/users";
+import { setLoading, clearLoading } from "../../slices/loading";
 import Pagination, {
   DEFAULT_ITEMS_PER_PAGE,
   PageSizeSelect,
@@ -265,7 +266,10 @@ const TasksList = () => {
     if (filterStatus.length) params.status = filterStatus.join(",");
     if (filterDateFrom) params.dateFrom = filterDateFrom;
     if (filterDateTo) params.dateTo = filterDateTo;
-    TaskDataService.downloadAllTasks(params);
+    dispatch(setLoading("Exporting tasks..."));
+    TaskDataService.downloadAllTasks(params)
+      .then(() => dispatch(clearLoading()))
+      .catch(() => dispatch(clearLoading()));
   };
 
   return (
