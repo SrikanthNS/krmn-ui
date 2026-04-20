@@ -6,6 +6,8 @@ import userReducer from "./slices/users";
 import clientReducer from "./slices/clients";
 import loadingReducer from "./slices/loading";
 import featureFlagsReducer from "./slices/featureFlags";
+import agentReducer from "./slices/agent";
+import analyticsReducer from "./slices/analytics";
 
 const reducer = {
   auth: authReducer,
@@ -15,6 +17,8 @@ const reducer = {
   client: clientReducer,
   loading: loadingReducer,
   featureFlags: featureFlagsReducer,
+  agent: agentReducer,
+  analytics: analyticsReducer,
 };
 
 const store = configureStore({

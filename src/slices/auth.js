@@ -71,12 +71,35 @@ const authSlice = createSlice({
         }
       }
     },
+    updateRecentTaskLimit: (state, action) => {
+      if (state.user) {
+        state.user.recentTaskLimit = action.payload;
+        const stored = JSON.parse(localStorage.getItem("user"));
+        if (stored) {
+          stored.recentTaskLimit = action.payload;
+          localStorage.setItem("user", JSON.stringify(stored));
+        }
+      }
+    },
     updateDarkModeSettings: (state, action) => {
       if (state.user) {
         state.user.darkModeSettings = action.payload;
         const stored = JSON.parse(localStorage.getItem("user"));
         if (stored) {
           stored.darkModeSettings = action.payload;
+          localStorage.setItem("user", JSON.stringify(stored));
+        }
+      }
+    },
+    updateUserFeatureFlags: (state, action) => {
+      if (state.user) {
+        state.user.featureFlags = {
+          ...state.user.featureFlags,
+          ...action.payload,
+        };
+        const stored = JSON.parse(localStorage.getItem("user"));
+        if (stored) {
+          stored.featureFlags = { ...stored.featureFlags, ...action.payload };
           localStorage.setItem("user", JSON.stringify(stored));
         }
       }
@@ -117,7 +140,9 @@ const authSlice = createSlice({
 const { reducer, actions } = authSlice;
 export const {
   updateItemsPerPage,
+  updateRecentTaskLimit,
   updateDarkModeSettings,
+  updateUserFeatureFlags,
   sessionExpired,
   clearSessionMessage,
 } = actions;

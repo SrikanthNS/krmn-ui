@@ -69,6 +69,13 @@ const downloadAllTasks = async (params = {}) => {
 const getCurrentUserTasks = () =>
   http.get("/user/tasks", { headers: authHeader() });
 
+const getRecentTasks = (limit) => {
+  const url = limit
+    ? `/tasks/user/recent?limit=${limit}`
+    : "/tasks/user/recent";
+  return http.get(url, { headers: authHeader() });
+};
+
 const get = (id) => http.get(`/tasks/${id}`, { headers: authHeader() });
 
 const create = (data) => http.post("/tasks", data, { headers: authHeader() });
@@ -92,6 +99,7 @@ const TaskService = {
   removeAll,
   findByDesc,
   getCurrentUserTasks,
+  getRecentTasks,
   downloadAllTasks,
 };
 

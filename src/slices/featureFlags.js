@@ -1,11 +1,17 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import FeatureFlagService from "../services/featureFlag.service";
+import { updateUserFeatureFlags } from "./auth";
 
 export const retrieveFeatureFlags = createAsyncThunk(
   "featureFlags/retrieve",
   async (_, thunkAPI) => {
     try {
       const res = await FeatureFlagService.getAll();
+      // Also sync all flags into the auth user state
+      const currentUser = thunkAPI.getState().auth.user;
+      if (currentUser && res.data) {
+        thunkAPI.dispatch(updateUserFeatureFlags(res.data));
+      }
       return res.data;
     } catch (error) {
       const message =
@@ -24,6 +30,8 @@ export const toggleFeatureFlag = createAsyncThunk(
   async ({ key, enabled }, thunkAPI) => {
     try {
       const res = await FeatureFlagService.toggle(key, enabled);
+      // Sync the toggled flag into the auth user state
+      thunkAPI.dispatch(updateUserFeatureFlags({ [key]: enabled }));
       return res.data;
     } catch (error) {
       const message =
@@ -52,13 +60,19 @@ const featureFlagSlice = createSlice({
     },
     [retrieveFeatureFlags.rejected]: (state, action) => {
       state.loading = false;
-      state.error = action.payload;
+      state.error =
+        typeof action.payload === "string"
+          ? action.payload
+          : "Error retrieving feature flags.";
     },
     [toggleFeatureFlag.fulfilled]: (state, action) => {
       state.flags[action.payload.key] = action.payload.enabled;
     },
     [toggleFeatureFlag.rejected]: (state, action) => {
-      state.error = action.payload;
+      state.error =
+        typeof action.payload === "string"
+          ? action.payload
+          : "Error toggling feature flag.";
     },
   },
 });

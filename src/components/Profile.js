@@ -3,9 +3,14 @@ import { useSelector, useDispatch } from "react-redux";
 import { Redirect } from "react-router-dom";
 import authService from "../services/auth.service";
 import UserService from "../services/user.service";
-import { updateItemsPerPage, updateDarkModeSettings } from "../slices/auth";
+import {
+  updateItemsPerPage,
+  updateDarkModeSettings,
+  updateRecentTaskLimit,
+} from "../slices/auth";
 
 const ALLOWED_PAGE_SIZES = [10, 20, 50, 100];
+const ALLOWED_RECENT_LIMITS = [3, 5, 10, 15, 20];
 
 // Dark mode schedule modes (similar to macOS)
 const DARK_MODE_OPTIONS = {
@@ -195,424 +200,512 @@ const Profile = () => {
       .finally(() => setSavingPreference(false));
   };
 
+  const handleRecentTaskLimitChange = (newValue) => {
+    setSavingPreference(true);
+    setPrefMessage("");
+    UserService.updatePreferences({ recentTaskLimit: newValue })
+      .then(() => {
+        dispatch(updateRecentTaskLimit(newValue));
+        setPrefMessage("Saved!");
+        setTimeout(() => setPrefMessage(""), 2000);
+      })
+      .catch((err) => {
+        setPrefMessage(err.response?.data?.message || "Failed to save.");
+      })
+      .finally(() => setSavingPreference(false));
+  };
+
+  const initials = currentUser.username
+    ? currentUser.username.slice(0, 2).toUpperCase()
+    : "U";
+
+  const roleLabels = currentUser.roles
+    ? currentUser.roles.map((r) => r.replace("ROLE_", ""))
+    : [];
+
+  const hasPreferences =
+    currentUser.featureFlags?.user_preferences ||
+    currentUser.featureFlags?.dark_mode ||
+    currentUser.featureFlags?.task_prefill;
+
   return (
-    <div className="container" style={{ maxWidth: 600 }}>
-      <div className="card shadow-sm mb-4">
-        <div
-          className="card-header text-white"
-          style={{
-            background: "linear-gradient(135deg, #4a90d9, #357abd)",
-          }}
-        >
-          <h5 className="mb-0">
-            <span role="img" aria-label="profile">
-              👤
-            </span>{" "}
-            {currentUser.username}'s Profile
-          </h5>
-        </div>
-        <div className="card-body">
-          <p className="mb-2">
-            <strong>Email:</strong> {currentUser.email}
-          </p>
-          <p className="mb-0">
-            <strong>Roles:</strong>{" "}
-            {currentUser.roles &&
-              currentUser.roles.map((r) => r.replace("ROLE_", "")).join(", ")}
-          </p>
+    <div className="profile-page">
+      {/* ── Hero Banner ── */}
+      <div className="profile-hero">
+        <div className="profile-hero-bg" />
+        <div className="profile-hero-content">
+          <div className="profile-avatar">{initials}</div>
+          <h4 className="profile-name">{currentUser.username}</h4>
+          <p className="profile-email">{currentUser.email}</p>
+          <div className="profile-roles">
+            {roleLabels.map((r) => (
+              <span key={r} className="profile-role-badge">
+                {r}
+              </span>
+            ))}
+          </div>
         </div>
       </div>
 
-      {/* Change Password Section */}
-      <div className="card shadow-sm">
-        <div className="card-header d-flex justify-content-between align-items-center">
-          <h6 className="mb-0">
-            <span role="img" aria-label="lock">
-              🔒
-            </span>{" "}
-            Change Password
-          </h6>
-          <button
-            className={`btn btn-sm ${showForm ? "btn-outline-secondary" : "btn-outline-primary"}`}
-            onClick={() => {
-              setShowForm(!showForm);
-              setMessage("");
-            }}
-          >
-            {showForm ? "Cancel" : "Change"}
-          </button>
+      {/* ── Cards Grid ── */}
+      <div className="profile-cards">
+        {/* ── Security Card ── */}
+        <div className="profile-card">
+          <div className="profile-card-header">
+            <div className="profile-card-icon security">
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+              </svg>
+            </div>
+            <div>
+              <h6 className="profile-card-title">Security</h6>
+              <p className="profile-card-subtitle">Manage your password</p>
+            </div>
+            <button
+              className={`btn btn-sm profile-card-action ${showForm ? "btn-outline-secondary" : "btn-outline-primary"}`}
+              onClick={() => {
+                setShowForm(!showForm);
+                setMessage("");
+              }}
+            >
+              {showForm ? "Cancel" : "Change Password"}
+            </button>
+          </div>
+
+          {showForm && (
+            <div className="profile-card-body">
+              {message && (
+                <div
+                  className={`alert ${isError ? "alert-danger" : "alert-success"} py-2 mb-3`}
+                  role="alert"
+                >
+                  {message}
+                </div>
+              )}
+              <form onSubmit={handleChangePassword}>
+                <div className="form-group mb-3">
+                  <label htmlFor="currentPassword" className="profile-label">
+                    Current Password
+                  </label>
+                  <div className="password-wrapper">
+                    <input
+                      type={showCurrentPw ? "text" : "password"}
+                      id="currentPassword"
+                      className="form-control"
+                      placeholder="Enter current password"
+                      value={currentPassword}
+                      onChange={(e) => setCurrentPassword(e.target.value)}
+                      required
+                    />
+                    <button
+                      type="button"
+                      className="password-toggle"
+                      onClick={() => setShowCurrentPw(!showCurrentPw)}
+                      tabIndex={-1}
+                    >
+                      {showCurrentPw ? (
+                        <svg
+                          width="16"
+                          height="16"
+                          viewBox="0 0 16 16"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="1.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="M2 8s2.5-4.5 6-4.5S14 8 14 8s-2.5 4.5-6 4.5S2 8 2 8z" />
+                          <circle cx="8" cy="8" r="2" />
+                          <line x1="2.5" y1="2.5" x2="13.5" y2="13.5" />
+                        </svg>
+                      ) : (
+                        <svg
+                          width="16"
+                          height="16"
+                          viewBox="0 0 16 16"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="1.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="M2 8s2.5-4.5 6-4.5S14 8 14 8s-2.5 4.5-6 4.5S2 8 2 8z" />
+                          <circle cx="8" cy="8" r="2" />
+                        </svg>
+                      )}
+                    </button>
+                  </div>
+                </div>
+                <div className="profile-pw-row">
+                  <div className="form-group mb-3 flex-fill">
+                    <label htmlFor="newPassword" className="profile-label">
+                      New Password
+                    </label>
+                    <div className="password-wrapper">
+                      <input
+                        type={showNewPw ? "text" : "password"}
+                        id="newPassword"
+                        className="form-control"
+                        placeholder="At least 6 characters"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        required
+                        minLength={6}
+                      />
+                      <button
+                        type="button"
+                        className="password-toggle"
+                        onClick={() => setShowNewPw(!showNewPw)}
+                        tabIndex={-1}
+                      >
+                        {showNewPw ? (
+                          <svg
+                            width="16"
+                            height="16"
+                            viewBox="0 0 16 16"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="1.5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M2 8s2.5-4.5 6-4.5S14 8 14 8s-2.5 4.5-6 4.5S2 8 2 8z" />
+                            <circle cx="8" cy="8" r="2" />
+                            <line x1="2.5" y1="2.5" x2="13.5" y2="13.5" />
+                          </svg>
+                        ) : (
+                          <svg
+                            width="16"
+                            height="16"
+                            viewBox="0 0 16 16"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="1.5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M2 8s2.5-4.5 6-4.5S14 8 14 8s-2.5 4.5-6 4.5S2 8 2 8z" />
+                            <circle cx="8" cy="8" r="2" />
+                          </svg>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                  <div className="form-group mb-3 flex-fill">
+                    <label htmlFor="confirmPassword" className="profile-label">
+                      Confirm Password
+                    </label>
+                    <div className="password-wrapper">
+                      <input
+                        type={showConfirmPw ? "text" : "password"}
+                        id="confirmPassword"
+                        className="form-control"
+                        placeholder="Re-enter new password"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        required
+                        minLength={6}
+                      />
+                      <button
+                        type="button"
+                        className="password-toggle"
+                        onClick={() => setShowConfirmPw(!showConfirmPw)}
+                        tabIndex={-1}
+                      >
+                        {showConfirmPw ? (
+                          <svg
+                            width="16"
+                            height="16"
+                            viewBox="0 0 16 16"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="1.5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M2 8s2.5-4.5 6-4.5S14 8 14 8s-2.5 4.5-6 4.5S2 8 2 8z" />
+                            <circle cx="8" cy="8" r="2" />
+                            <line x1="2.5" y1="2.5" x2="13.5" y2="13.5" />
+                          </svg>
+                        ) : (
+                          <svg
+                            width="16"
+                            height="16"
+                            viewBox="0 0 16 16"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="1.5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M2 8s2.5-4.5 6-4.5S14 8 14 8s-2.5 4.5-6 4.5S2 8 2 8z" />
+                            <circle cx="8" cy="8" r="2" />
+                          </svg>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  disabled={
+                    loading ||
+                    !currentPassword ||
+                    !newPassword ||
+                    !confirmPassword
+                  }
+                >
+                  {loading ? (
+                    <>
+                      <span className="spinner-border spinner-border-sm mr-2" />{" "}
+                      Updating...
+                    </>
+                  ) : (
+                    "Update Password"
+                  )}
+                </button>
+              </form>
+            </div>
+          )}
         </div>
 
-        {showForm && (
-          <div className="card-body">
-            {message && (
-              <div
-                className={`alert ${isError ? "alert-danger" : "alert-success"} py-2`}
-                role="alert"
-              >
-                {message}
+        {/* ── Preferences Card ── */}
+        {hasPreferences && (
+          <div className="profile-card">
+            <div className="profile-card-header">
+              <div className="profile-card-icon preferences">
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <circle cx="12" cy="12" r="3" />
+                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                </svg>
               </div>
-            )}
-            <form onSubmit={handleChangePassword}>
-              <div className="form-group mb-3">
-                <label htmlFor="currentPassword">Current Password</label>
-                <div className="password-wrapper">
-                  <input
-                    type={showCurrentPw ? "text" : "password"}
-                    id="currentPassword"
-                    className="form-control"
-                    placeholder="Enter current password"
-                    value={currentPassword}
-                    onChange={(e) => setCurrentPassword(e.target.value)}
-                    required
-                  />
-                  <button
-                    type="button"
-                    className="password-toggle"
-                    onClick={() => setShowCurrentPw(!showCurrentPw)}
-                    tabIndex={-1}
+              <div>
+                <h6 className="profile-card-title">Preferences</h6>
+                <p className="profile-card-subtitle">
+                  Customize your experience
+                </p>
+              </div>
+              {prefMessage && (
+                <span
+                  className={`profile-save-indicator ${prefMessage === "Saved!" ? "success" : "error"}`}
+                >
+                  {prefMessage === "Saved!" ? "\u2713" : "\u2717"} {prefMessage}
+                </span>
+              )}
+            </div>
+            <div className="profile-card-body">
+              {/* Items per page */}
+              {currentUser.featureFlags?.user_preferences && (
+                <div className="profile-pref-row">
+                  <div className="profile-pref-info">
+                    <span className="profile-pref-label">Items per page</span>
+                    <span className="profile-pref-desc">
+                      Number of rows shown in tables
+                    </span>
+                  </div>
+                  <select
+                    id="itemsPerPage"
+                    className="form-control profile-pref-select"
+                    value={currentUser.itemsPerPage || 20}
+                    disabled={savingPreference}
+                    onChange={(e) =>
+                      handleItemsPerPageChange(Number(e.target.value))
+                    }
                   >
-                    {showCurrentPw ? (
-                      <svg
-                        width="16"
-                        height="16"
-                        viewBox="0 0 16 16"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="M2 8s2.5-4.5 6-4.5S14 8 14 8s-2.5 4.5-6 4.5S2 8 2 8z" />
-                        <circle cx="8" cy="8" r="2" />
-                        <line x1="2.5" y1="2.5" x2="13.5" y2="13.5" />
-                      </svg>
-                    ) : (
-                      <svg
-                        width="16"
-                        height="16"
-                        viewBox="0 0 16 16"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="M2 8s2.5-4.5 6-4.5S14 8 14 8s-2.5 4.5-6 4.5S2 8 2 8z" />
-                        <circle cx="8" cy="8" r="2" />
-                      </svg>
-                    )}
-                  </button>
+                    {ALLOWED_PAGE_SIZES.map((size) => (
+                      <option key={size} value={size}>
+                        {size}
+                      </option>
+                    ))}
+                  </select>
                 </div>
-              </div>
-              <div className="form-group mb-3">
-                <label htmlFor="newPassword">New Password</label>
-                <div className="password-wrapper">
-                  <input
-                    type={showNewPw ? "text" : "password"}
-                    id="newPassword"
-                    className="form-control"
-                    placeholder="At least 6 characters"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    required
-                    minLength={6}
-                  />
-                  <button
-                    type="button"
-                    className="password-toggle"
-                    onClick={() => setShowNewPw(!showNewPw)}
-                    tabIndex={-1}
+              )}
+
+              {/* Recent tasks prefill limit */}
+              {currentUser.featureFlags?.task_prefill && (
+                <div className="profile-pref-row">
+                  <div className="profile-pref-info">
+                    <span className="profile-pref-label">
+                      Recent tasks in prefill
+                    </span>
+                    <span className="profile-pref-desc">
+                      Quick-fill options when creating tasks
+                    </span>
+                  </div>
+                  <select
+                    id="recentTaskLimit"
+                    className="form-control profile-pref-select"
+                    value={currentUser.recentTaskLimit || 5}
+                    disabled={savingPreference}
+                    onChange={(e) =>
+                      handleRecentTaskLimitChange(Number(e.target.value))
+                    }
                   >
-                    {showNewPw ? (
-                      <svg
-                        width="16"
-                        height="16"
-                        viewBox="0 0 16 16"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="M2 8s2.5-4.5 6-4.5S14 8 14 8s-2.5 4.5-6 4.5S2 8 2 8z" />
-                        <circle cx="8" cy="8" r="2" />
-                        <line x1="2.5" y1="2.5" x2="13.5" y2="13.5" />
-                      </svg>
-                    ) : (
-                      <svg
-                        width="16"
-                        height="16"
-                        viewBox="0 0 16 16"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="M2 8s2.5-4.5 6-4.5S14 8 14 8s-2.5 4.5-6 4.5S2 8 2 8z" />
-                        <circle cx="8" cy="8" r="2" />
-                      </svg>
-                    )}
-                  </button>
+                    {ALLOWED_RECENT_LIMITS.map((n) => (
+                      <option key={n} value={n}>
+                        {n}
+                      </option>
+                    ))}
+                  </select>
                 </div>
-              </div>
-              <div className="form-group mb-3">
-                <label htmlFor="confirmPassword">Confirm New Password</label>
-                <div className="password-wrapper">
-                  <input
-                    type={showConfirmPw ? "text" : "password"}
-                    id="confirmPassword"
-                    className="form-control"
-                    placeholder="Re-enter new password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    required
-                    minLength={6}
-                  />
-                  <button
-                    type="button"
-                    className="password-toggle"
-                    onClick={() => setShowConfirmPw(!showConfirmPw)}
-                    tabIndex={-1}
-                  >
-                    {showConfirmPw ? (
-                      <svg
-                        width="16"
-                        height="16"
-                        viewBox="0 0 16 16"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="M2 8s2.5-4.5 6-4.5S14 8 14 8s-2.5 4.5-6 4.5S2 8 2 8z" />
-                        <circle cx="8" cy="8" r="2" />
-                        <line x1="2.5" y1="2.5" x2="13.5" y2="13.5" />
-                      </svg>
-                    ) : (
-                      <svg
-                        width="16"
-                        height="16"
-                        viewBox="0 0 16 16"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="M2 8s2.5-4.5 6-4.5S14 8 14 8s-2.5 4.5-6 4.5S2 8 2 8z" />
-                        <circle cx="8" cy="8" r="2" />
-                      </svg>
-                    )}
-                  </button>
+              )}
+
+              {/* Appearance / Dark mode */}
+              {currentUser.featureFlags?.dark_mode && (
+                <div className="profile-pref-row profile-pref-row-block">
+                  <div className="profile-pref-info">
+                    <span className="profile-pref-label">
+                      {theme === "dark" ? "\u{1F319}" : "\u{2600}\u{FE0F}"}{" "}
+                      Appearance
+                    </span>
+                    <span className="profile-pref-desc">
+                      Currently{" "}
+                      <span className={`profile-theme-badge ${theme}`}>
+                        {theme === "dark" ? "Dark" : "Light"}
+                      </span>
+                    </span>
+                  </div>
+
+                  <div className="dark-mode-options">
+                    <label className="dark-mode-option">
+                      <input
+                        type="radio"
+                        name="darkMode"
+                        checked={darkSettings.mode === DARK_MODE_OPTIONS.OFF}
+                        onChange={() =>
+                          updateDarkSettings({ mode: DARK_MODE_OPTIONS.OFF })
+                        }
+                      />
+                      <div className="option-content">
+                        <span className="option-label">Off</span>
+                        <span className="option-desc">
+                          Always use light mode
+                        </span>
+                      </div>
+                    </label>
+
+                    <label className="dark-mode-option">
+                      <input
+                        type="radio"
+                        name="darkMode"
+                        checked={darkSettings.mode === DARK_MODE_OPTIONS.ON}
+                        onChange={() =>
+                          updateDarkSettings({ mode: DARK_MODE_OPTIONS.ON })
+                        }
+                      />
+                      <div className="option-content">
+                        <span className="option-label">On</span>
+                        <span className="option-desc">
+                          Always use dark mode
+                        </span>
+                      </div>
+                    </label>
+
+                    <label className="dark-mode-option">
+                      <input
+                        type="radio"
+                        name="darkMode"
+                        checked={
+                          darkSettings.mode === DARK_MODE_OPTIONS.SUNSET_SUNRISE
+                        }
+                        onChange={() =>
+                          updateDarkSettings({
+                            mode: DARK_MODE_OPTIONS.SUNSET_SUNRISE,
+                          })
+                        }
+                      />
+                      <div className="option-content">
+                        <span className="option-label">Sunset to Sunrise</span>
+                        <span className="option-desc">
+                          Dark from ~{decimalToTime(getSunTimes().sunset)} to ~
+                          {decimalToTime(getSunTimes().sunrise)}
+                        </span>
+                      </div>
+                    </label>
+
+                    <label className="dark-mode-option">
+                      <input
+                        type="radio"
+                        name="darkMode"
+                        checked={darkSettings.mode === DARK_MODE_OPTIONS.CUSTOM}
+                        onChange={() =>
+                          updateDarkSettings({ mode: DARK_MODE_OPTIONS.CUSTOM })
+                        }
+                      />
+                      <div className="option-content">
+                        <span className="option-label">Custom Schedule</span>
+                        <span className="option-desc">Set your own times</span>
+                      </div>
+                    </label>
+                  </div>
+
+                  {darkSettings.mode === DARK_MODE_OPTIONS.CUSTOM && (
+                    <div className="custom-schedule mt-3">
+                      <div className="d-flex align-items-center gap-2">
+                        <div className="flex-fill">
+                          <label
+                            htmlFor="darkFrom"
+                            className="small text-muted mb-1 d-block"
+                          >
+                            Dark mode from
+                          </label>
+                          <input
+                            id="darkFrom"
+                            type="time"
+                            className="form-control form-control-sm"
+                            value={darkSettings.customFrom}
+                            onChange={(e) =>
+                              updateDarkSettings({ customFrom: e.target.value })
+                            }
+                          />
+                        </div>
+                        <span className="mt-3 px-2">&rarr;</span>
+                        <div className="flex-fill">
+                          <label
+                            htmlFor="darkTo"
+                            className="small text-muted mb-1 d-block"
+                          >
+                            Light mode from
+                          </label>
+                          <input
+                            id="darkTo"
+                            type="time"
+                            className="form-control form-control-sm"
+                            value={darkSettings.customTo}
+                            onChange={(e) =>
+                              updateDarkSettings({ customTo: e.target.value })
+                            }
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
-              </div>
-              <button
-                type="submit"
-                className="btn btn-primary"
-                disabled={
-                  loading ||
-                  !currentPassword ||
-                  !newPassword ||
-                  !confirmPassword
-                }
-              >
-                {loading ? (
-                  <>
-                    <span className="spinner-border spinner-border-sm mr-2" />{" "}
-                    Updating...
-                  </>
-                ) : (
-                  "Update Password"
-                )}
-              </button>
-            </form>
+              )}
+            </div>
           </div>
         )}
       </div>
-
-      {/* Preferences */}
-      {(currentUser.featureFlags?.user_preferences ||
-        currentUser.featureFlags?.dark_mode) && (
-        <div className="card shadow-sm mt-4">
-          <div className="card-header d-flex justify-content-between align-items-center">
-            <h6 className="mb-0">
-              <span role="img" aria-label="settings">
-                &#9881;&#65039;
-              </span>{" "}
-              Preferences
-            </h6>
-            {prefMessage && (
-              <small
-                className={
-                  prefMessage === "Saved!" ? "text-success" : "text-danger"
-                }
-              >
-                {prefMessage}
-              </small>
-            )}
-          </div>
-          <div className="card-body">
-            {currentUser.featureFlags?.user_preferences && (
-              <div className="d-flex align-items-center justify-content-between">
-                <label htmlFor="itemsPerPage" className="mb-0">
-                  Items per page
-                </label>
-                <select
-                  id="itemsPerPage"
-                  className="form-control"
-                  style={{ width: 100 }}
-                  value={currentUser.itemsPerPage || 20}
-                  disabled={savingPreference}
-                  onChange={(e) =>
-                    handleItemsPerPageChange(Number(e.target.value))
-                  }
-                >
-                  {ALLOWED_PAGE_SIZES.map((size) => (
-                    <option key={size} value={size}>
-                      {size}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-            {currentUser.featureFlags?.dark_mode && (
-              <div
-                className={`dark-mode-settings${
-                  currentUser.featureFlags?.user_preferences
-                    ? " mt-3 pt-3 border-top"
-                    : ""
-                }`}
-              >
-                <div className="d-flex align-items-center justify-content-between mb-3">
-                  <span>
-                    {theme === "dark" ? "\u{1F319}" : "\u{2600}\u{FE0F}"}{" "}
-                    Appearance
-                  </span>
-                  <span
-                    className={`badge badge-${theme === "dark" ? "dark" : "light"} border`}
-                  >
-                    {theme === "dark" ? "Dark" : "Light"}
-                  </span>
-                </div>
-
-                <div className="dark-mode-options">
-                  <label className="dark-mode-option">
-                    <input
-                      type="radio"
-                      name="darkMode"
-                      checked={darkSettings.mode === DARK_MODE_OPTIONS.OFF}
-                      onChange={() =>
-                        updateDarkSettings({ mode: DARK_MODE_OPTIONS.OFF })
-                      }
-                    />
-                    <div className="option-content">
-                      <span className="option-label">Off</span>
-                      <span className="option-desc">Always use light mode</span>
-                    </div>
-                  </label>
-
-                  <label className="dark-mode-option">
-                    <input
-                      type="radio"
-                      name="darkMode"
-                      checked={darkSettings.mode === DARK_MODE_OPTIONS.ON}
-                      onChange={() =>
-                        updateDarkSettings({ mode: DARK_MODE_OPTIONS.ON })
-                      }
-                    />
-                    <div className="option-content">
-                      <span className="option-label">On</span>
-                      <span className="option-desc">Always use dark mode</span>
-                    </div>
-                  </label>
-
-                  <label className="dark-mode-option">
-                    <input
-                      type="radio"
-                      name="darkMode"
-                      checked={
-                        darkSettings.mode === DARK_MODE_OPTIONS.SUNSET_SUNRISE
-                      }
-                      onChange={() =>
-                        updateDarkSettings({
-                          mode: DARK_MODE_OPTIONS.SUNSET_SUNRISE,
-                        })
-                      }
-                    />
-                    <div className="option-content">
-                      <span className="option-label">Sunset to Sunrise</span>
-                      <span className="option-desc">
-                        Dark from ~{decimalToTime(getSunTimes().sunset)} to ~
-                        {decimalToTime(getSunTimes().sunrise)}
-                      </span>
-                    </div>
-                  </label>
-
-                  <label className="dark-mode-option">
-                    <input
-                      type="radio"
-                      name="darkMode"
-                      checked={darkSettings.mode === DARK_MODE_OPTIONS.CUSTOM}
-                      onChange={() =>
-                        updateDarkSettings({ mode: DARK_MODE_OPTIONS.CUSTOM })
-                      }
-                    />
-                    <div className="option-content">
-                      <span className="option-label">Custom Schedule</span>
-                      <span className="option-desc">Set your own times</span>
-                    </div>
-                  </label>
-                </div>
-
-                {darkSettings.mode === DARK_MODE_OPTIONS.CUSTOM && (
-                  <div className="custom-schedule mt-3">
-                    <div className="d-flex align-items-center gap-2">
-                      <div className="flex-fill">
-                        <label
-                          htmlFor="darkFrom"
-                          className="small text-muted mb-1 d-block"
-                        >
-                          Dark mode from
-                        </label>
-                        <input
-                          id="darkFrom"
-                          type="time"
-                          className="form-control form-control-sm"
-                          value={darkSettings.customFrom}
-                          onChange={(e) =>
-                            updateDarkSettings({ customFrom: e.target.value })
-                          }
-                        />
-                      </div>
-                      <span className="mt-3 px-2">→</span>
-                      <div className="flex-fill">
-                        <label
-                          htmlFor="darkTo"
-                          className="small text-muted mb-1 d-block"
-                        >
-                          Light mode from
-                        </label>
-                        <input
-                          id="darkTo"
-                          type="time"
-                          className="form-control form-control-sm"
-                          value={darkSettings.customTo}
-                          onChange={(e) =>
-                            updateDarkSettings({ customTo: e.target.value })
-                          }
-                        />
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   );
 };

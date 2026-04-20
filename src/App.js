@@ -7,10 +7,15 @@ import EventBus from "./common/EventBus";
 import Loader from "./components/Loader";
 import Login from "./components/Login";
 import { history } from "./helpers/history";
-import { logout, clearSessionMessage } from "./slices/auth";
+import {
+  logout,
+  clearSessionMessage,
+  updateUserFeatureFlags,
+} from "./slices/auth";
 import { clearMessage } from "./slices/message";
 import AuthVerify from "./common/AuthVerify";
 import { capitalize } from "lodash";
+import FeatureFlagService from "./services/featureFlag.service";
 
 // Lazy-loaded route components
 const Home = lazy(() => import("./components/Home"));
@@ -27,6 +32,8 @@ const Client = lazy(() => import("components/clients/Client"));
 const StaffList = lazy(() => import("components/users/StaffList"));
 const User = lazy(() => import("components/users/User"));
 const FeatureFlags = lazy(() => import("components/admin/FeatureFlags"));
+const AgentChat = lazy(() => import("components/agent/AgentChat"));
+const Visualization = lazy(() => import("components/analytics/Visualization"));
 
 const App = () => {
   const [showAdminBoard, setShowAdminBoard] = useState(false);
@@ -66,6 +73,21 @@ const App = () => {
     EventBus.on("logout", () => logOut());
     return () => EventBus.remove("logout");
   }, [currentUser, logOut]);
+
+  // Refresh feature flags from API on mount so toggles are always in sync
+  useEffect(() => {
+    if (currentUser) {
+      FeatureFlagService.getAll()
+        .then((res) => {
+          if (res.data) {
+            dispatch(updateUserFeatureFlags(res.data));
+          }
+        })
+        .catch(() => {
+          // silent — flags will use stale values from login
+        });
+    }
+  }, [currentUser, dispatch]);
 
   // Apply saved theme on mount (only if dark_mode flag is enabled)
   useEffect(() => {
@@ -209,8 +231,35 @@ const App = () => {
                           <span className="nav-icon">&#10133;</span> Add Staff
                         </Link>
                       </li>
+                      {currentUser?.featureFlags?.visualization && (
+                        <li className="nav-section">
+                          <span className="nav-section-label">Analytics</span>
+                          <Link
+                            to="/visualization"
+                            className="nav-menu-item"
+                            onClick={closeNav}
+                          >
+                            <span className="nav-icon">&#128200;</span>{" "}
+                            Dashboard
+                          </Link>
+                        </li>
+                      )}
                     </>
                   )}
+                  {!showAdminBoard &&
+                    currentUser?.featureFlags?.visualization && (
+                      <li className="nav-section">
+                        <span className="nav-section-label">Analytics</span>
+                        <Link
+                          to="/visualization"
+                          className="nav-menu-item"
+                          onClick={closeNav}
+                        >
+                          <span className="nav-icon">&#128200;</span> My
+                          Dashboard
+                        </Link>
+                      </li>
+                    )}
                   {showSuperAdmin && (
                     <>
                       <li className="nav-section">
@@ -316,11 +365,19 @@ const App = () => {
               <Route path="/staffList" component={StaffList} />
               <Route path="/users/:id" component={User} />
               <Route path="/feature-flags" component={FeatureFlags} />
+              <Route path="/visualization" component={Visualization} />
             </Switch>
           </Suspense>
         </main>
 
         <AuthVerify logOut={logOut} />
+
+        {/* AI Agent – gated behind feature flag */}
+        {currentUser?.featureFlags?.ai_agent && (
+          <Suspense fallback={null}>
+            <AgentChat />
+          </Suspense>
+        )}
       </div>
     </Router>
   );

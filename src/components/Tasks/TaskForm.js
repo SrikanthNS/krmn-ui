@@ -1,10 +1,11 @@
 import { ErrorMessage, Field, Form, Formik } from "formik";
 import moment from "moment";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import * as Yup from "yup";
 import { clearMessage } from "../../slices/message";
 import SearchableSelect from "../SearchableSelect";
+import TaskService from "../../services/task.service";
 
 const RequiredMark = () => <span className="tf-required">*</span>;
 
@@ -18,15 +19,25 @@ export const TaskForm = ({ saveTask }) => {
   const [assigneeId, setAssigneeId] = useState("");
   const [loading, setLoading] = useState(false);
   const { message } = useSelector((state) => state.message);
+  const [recentTasks, setRecentTasks] = useState([]);
+  const formikRef = useRef(null);
 
   const isAdminOrMod = currentUser?.roles?.some(
     (r) => r === "ROLE_ADMIN" || r === "ROLE_MODERATOR",
   );
 
+  const prefillEnabled = currentUser?.featureFlags?.task_prefill;
+  const recentTaskLimit = currentUser?.recentTaskLimit || 5;
+
   const dispatch = useDispatch();
   useEffect(() => {
     dispatch(clearMessage());
-  }, [dispatch]);
+    if (prefillEnabled) {
+      TaskService.getRecentTasks(recentTaskLimit)
+        .then((res) => setRecentTasks(res.data || []))
+        .catch(() => {});
+    }
+  }, [dispatch, prefillEnabled, recentTaskLimit]);
 
   const initialValues = {
     description: "",
@@ -39,16 +50,26 @@ export const TaskForm = ({ saveTask }) => {
   const validationSchema = Yup.object().shape({
     clientId: Yup.string().required("Client is required"),
     description: Yup.string().required("Description is required"),
-    minutesSpent: Yup.number()
-      .typeError("Must be a number")
-      .positive("Must be positive")
-      .nullable()
-      .transform((value, original) => (original === "" ? null : value))
-      .when([], {
-        is: () => taskStatus !== "todo",
-        then: (schema) => schema.required("Time spent is required"),
-        otherwise: (schema) => schema.notRequired(),
-      }),
+    minutesSpent: Yup.mixed().test(
+      "minutes-validation",
+      "Time spent is required",
+      function (value) {
+        // Optional for todo tasks
+        if (taskStatus === "todo") return true;
+        // Required for other statuses
+        if (value === "" || value === null || value === undefined) {
+          return this.createError({ message: "Time spent is required" });
+        }
+        const num = Number(value);
+        if (isNaN(num)) {
+          return this.createError({ message: "Must be a number" });
+        }
+        if (num <= 0) {
+          return this.createError({ message: "Must be positive" });
+        }
+        return true;
+      },
+    ),
     taskType: Yup.string().required("Task type is required"),
     billingCategory: Yup.string().required("Billing category is required"),
   });
@@ -56,8 +77,13 @@ export const TaskForm = ({ saveTask }) => {
   const handleSubmit = (formValues) => {
     setLoading(true);
     const isCompleted = taskStatus === "completed";
+    const minutes =
+      formValues.minutesSpent === "" || formValues.minutesSpent == null
+        ? null
+        : Number(formValues.minutesSpent);
     const payload = {
       ...formValues,
+      minutesSpent: minutes,
       date: taskDate,
       completed: isCompleted,
       status: taskStatus,
@@ -69,8 +95,25 @@ export const TaskForm = ({ saveTask }) => {
       .finally(() => setLoading(false));
   };
 
+  const [prefillValue, setPrefillValue] = useState("");
+
+  const handlePrefill = (taskId) => {
+    setPrefillValue(taskId);
+    if (!taskId || !formikRef.current) return;
+    const task = recentTasks.find((t) => String(t.id) === String(taskId));
+    if (!task) return;
+    formikRef.current.setFieldValue("clientId", String(task.clientId || ""));
+    formikRef.current.setFieldValue("taskType", task.taskType || "");
+    formikRef.current.setFieldValue(
+      "billingCategory",
+      task.billingCategory || "",
+    );
+    formikRef.current.setFieldValue("description", task.description || "");
+  };
+
   return (
     <Formik
+      innerRef={formikRef}
       initialValues={initialValues}
       validationSchema={validationSchema}
       onSubmit={handleSubmit}
@@ -80,6 +123,34 @@ export const TaskForm = ({ saveTask }) => {
           {message && (
             <div className="alert alert-danger tf-alert" role="alert">
               {message}
+            </div>
+          )}
+
+          {/* Prefill from recent tasks */}
+          {prefillEnabled && recentTasks.length > 0 && (
+            <div className="tf-row tf-row-full tf-prefill-row">
+              <div className="tf-field">
+                <label htmlFor="prefillSelect">
+                  <span role="img" aria-label="prefill">
+                    &#9889;
+                  </span>{" "}
+                  Prefill from recent task
+                </label>
+                <SearchableSelect
+                  id="prefillSelect"
+                  placeholder="-- Select a recent task to prefill --"
+                  options={recentTasks.map((t) => ({
+                    value: String(t.id),
+                    label: `${t.clientName} — ${t.taskType} (${t.billingCategory})`,
+                  }))}
+                  value={prefillValue}
+                  onChange={handlePrefill}
+                />
+                <small className="text-muted d-block mt-1">
+                  Fills Client, Task Type, Billing Category & Description from a
+                  recent task
+                </small>
+              </div>
             </div>
           )}
 
