@@ -148,7 +148,7 @@ const App = () => {
   }, [currentUser]);
 
   return (
-    <Router history={history}>
+    <Router basename="/app" history={history}>
       <Loader />
       <div className="app-shell">
         {/* ── Sidebar / Top Nav ── */}
