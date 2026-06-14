@@ -155,13 +155,17 @@ const App = () => {
         {/* ── Sidebar / Top Nav ── */}
         <nav className="app-navbar">
           <div className="app-navbar-inner">
-            <Link to="/" className="app-brand">
-              <img src={caLogo} alt="KRMN logo" className="brand-logo" />
-              <div className="brand-text-group">
-                <span className="brand-name">KRMN</span>
-                <span className="brand-sub">& Associates</span>
-              </div>
-            </Link>
+            <div className="app-brand">
+              <a href="/" className="brand-logo-link">
+                <img src={caLogo} alt="KRMN logo" className="brand-logo" />
+              </a>
+              <Link to="/" className="brand-text-link">
+                <div className="brand-text-group">
+                  <span className="brand-name">KRMN</span>
+                  <span className="brand-sub">& Associates</span>
+                </div>
+              </Link>
+            </div>
 
             <button
               className="navbar-toggler d-lg-none"

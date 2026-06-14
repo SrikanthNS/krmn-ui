@@ -130,9 +130,15 @@ a {
   display: flex;
   align-items: center;
   gap: 10px;
+  flex-shrink: 0;
+}
+
+.brand-logo-link,
+.brand-text-link {
   text-decoration: none;
   color: var(--text);
-  flex-shrink: 0;
+  display: flex;
+  align-items: center;
 }
 
 .brand-logo {
