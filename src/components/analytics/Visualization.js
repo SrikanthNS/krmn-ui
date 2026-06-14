@@ -25,20 +25,20 @@ import {
 } from "../../slices/analytics";
 
 const COLORS = [
-  "#4a90d9",
-  "#f0883e",
-  "#50c878",
-  "#e74c3c",
-  "#9b59b6",
-  "#1abc9c",
-  "#f39c12",
-  "#3498db",
+  "#0F172A",
+  "#2563EB",
+  "#059669",
+  "#EF4444",
+  "#6366F1",
+  "#0D9488",
+  "#D97706",
+  "#1E293B",
 ];
 
 const STATUS_COLORS = {
-  todo: "#6c757d",
-  "in-progress": "#4a90d9",
-  completed: "#50c878",
+  todo: "#64748B",
+  "in-progress": "#2563EB",
+  completed: "#059669",
 };
 
 function formatMinutes(mins) {

@@ -7,6 +7,7 @@ import EventBus from "./common/EventBus";
 import Loader from "./components/Loader";
 import Login from "./components/Login";
 import { history } from "./helpers/history";
+import caLogo from "./assets/ca.png";
 import {
   logout,
   clearSessionMessage,
@@ -155,8 +156,11 @@ const App = () => {
         <nav className="app-navbar">
           <div className="app-navbar-inner">
             <Link to="/" className="app-brand">
-              <span className="brand-icon">K</span>
-              <span className="brand-text">KRMN & Associates</span>
+              <img src={caLogo} alt="KRMN logo" className="brand-logo" />
+              <div className="brand-text-group">
+                <span className="brand-name">KRMN</span>
+                <span className="brand-sub">& Associates</span>
+              </div>
             </Link>
 
             <button

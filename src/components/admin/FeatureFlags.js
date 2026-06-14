@@ -41,10 +41,10 @@ const CATEGORY_ICONS = {
 };
 
 const CATEGORY_COLORS = {
-  Personalization: "#9b59b6",
-  "AI & Automation": "#e74c3c",
-  Analytics: "#4a90d9",
-  Productivity: "#50c878",
+  Personalization: "#6366F1",
+  "AI & Automation": "#EF4444",
+  Analytics: "#0F172A",
+  Productivity: "#059669",
 };
 
 const FeatureFlags = () => {
@@ -94,7 +94,7 @@ const FeatureFlags = () => {
         <div
           className="card-header text-white"
           style={{
-            background: "linear-gradient(135deg, #4a90d9, #357abd)",
+            background: "#0F172A",
           }}
         >
           <h5 className="mb-0">
